@@ -41,18 +41,9 @@ If there are any new datasets added, please update the README with the file stru
 ```
 - MusicNet should look like 
 ```
-├── 2004
-├── 2006
-├── 2008
-├── 2009
-├── 2011
-├── 2013
-├── 2014
-├── 2015
-├── 2017
-├── 2018
-├── LICENSE
-├── maestro-v3.0.0.csv
-├── maestro-v3.0.0.json
-└── README
+.
+├── test_data
+├── test_labels
+├── train_data
+└── train_labels
 ```
