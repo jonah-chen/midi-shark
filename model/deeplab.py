@@ -170,7 +170,7 @@ class SpacialPyramidPooling(Module):
             out_channels (int, optional): Number of output channels for each
             feature. Defaults to 256.
         """
-        super(SpacialPyramid, self).__init__()
+        super(SpacialPyramidPooling, self).__init__()
 
         # Direct 1x1 convolution layer
         self.conv1 = Conv2d(in_channels, out_channels,
@@ -292,12 +292,35 @@ class DeepLabv3Encoder(Module):
         return F.interpolate(x, scale_factor=4, mode="bilinear")
 
 
+class ImageDecoder(Module):
+    """
+    The decoder part of the semantic segmentation model described in 
+    `Encoder-Decoder with Atrous Separable Convolution for Semantic
+     Image Segmentation`.
+    """
+    def __init__(self, classes):
+        super(ImageDecoder, self).__init__()
+        self.params = Sequential(
+            Conv2d(256+48, 256, kernel_size=3, padding=1, bias=False),
+            BatchNorm2d(256), 
+            ReLU(),
+            Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
+            BatchNorm2d(256),
+            ReLU(),
+            Conv2d(256, classes, kernel_size=1)
+        )
+
+
+    def forward(self, x):
+        return self.params(x)
+
 if __name__ == '__main__':
     if torch.cuda.is_available():  # Use GPU if and only if available
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
         torch.set_default_dtype(torch.float32)
 
     dl = DeepLabv3Encoder()
+    dld = ImageDecoder(10)
     test = torch.rand(2, 3, 512, 512)
-    print(dl(test))
-    print(dl(test).shape)
+    print(dld(dl(test)))
+    print(dld(dl(test)).shape)
