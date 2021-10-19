@@ -17,6 +17,8 @@ class SepearableConv2d(Module):
 
     Note that batch normalization and activation function is applied after
     the depthwise convolution.
+
+    Author: Jonah Chen
     """
 
     def __init__(self,
@@ -70,7 +72,10 @@ class SepearableConv2d(Module):
 class ConvBlockNoSkip(Module):
     """
     Block of 3 convolutional layers with an identity skip connection.
+
+    Author: Jonah Chen
     """
+
     def __init__(self, in_channels, sizes, stride3=1):
         """
         Args:
@@ -105,8 +110,11 @@ class ConvBlockNoSkip(Module):
 class ConvBlock(ConvBlockNoSkip):
     """
     Block of 3 convolutional layers with an single convolutional layer 
-    as the skip connection. 
+    as the skip connection.
+
+    Author: Jonah Chen
     """
+
     def __init__(self, in_channels, sizes, stride3=2):
         """
         Args:
@@ -140,7 +148,10 @@ class ConvBlockReturnSkip(ConvBlock):
 
     WARNING: Do NOT use directly in a sequential model as `forward` returns
     two Tensors, which cause sequential to crash.
+
+    Author: Jonah Chen
     """
+
     def __init__(self, in_channels, sizes, stride3=2):
         super(ConvBlockReturnSkip, self).__init__(in_channels, sizes, stride3)
 
@@ -162,7 +173,10 @@ class SpacialPyramidPooling(Module):
         - Image pooling layer for global features.
     following the design described in `Encoder-Decoder with Atrous Separable
     Convolution for Semantic Image Segmentation`.
+    
+    Author: Jonah Chen
     """
+
     def __init__(self, in_channels=2048, out_channels=256):
         """
         Args:
@@ -179,19 +193,19 @@ class SpacialPyramidPooling(Module):
 
         # Atrous convolution rate=6
         self.conv6 = Conv2d(in_channels, out_channels,
-                            kernel_size=3, dilation=6, 
+                            kernel_size=3, dilation=6,
                             padding=6, bias=False)
         self.batch_norm6 = BatchNorm2d(out_channels)
 
         # Atrous convolution rate=12
         self.conv12 = Conv2d(in_channels, out_channels,
-                             kernel_size=3, dilation=12, 
+                             kernel_size=3, dilation=12,
                              padding=12, bias=False)
         self.batch_norm12 = BatchNorm2d(out_channels)
 
         # Atrous convolution rate=18
         self.conv18 = Conv2d(in_channels, out_channels,
-                             kernel_size=3, dilation=18, 
+                             kernel_size=3, dilation=18,
                              padding=18, bias=False)
         self.batch_norm18 = BatchNorm2d(out_channels)
 
@@ -223,8 +237,11 @@ class DeepLabv3Encoder(Module):
     """
     The encoder part of the semantic segmentation model described in 
     `Encoder-Decoder with Atrous Separable Convolution for Semantic
-     Image Segmentation`.
+    Image Segmentation`.
+
+    Author: Jonah Chen
     """
+
     def __init__(self):
         super(DeepLabv3Encoder, self).__init__()
 
@@ -296,13 +313,16 @@ class ImageDecoder(Module):
     """
     The decoder part of the semantic segmentation model described in 
     `Encoder-Decoder with Atrous Separable Convolution for Semantic
-     Image Segmentation`.
+    Image Segmentation`.
+
+    Author: Jonah Chen
     """
+
     def __init__(self, classes):
         super(ImageDecoder, self).__init__()
         self.params = Sequential(
             Conv2d(256+48, 256, kernel_size=3, padding=1, bias=False),
-            BatchNorm2d(256), 
+            BatchNorm2d(256),
             ReLU(),
             Conv2d(256, 256, kernel_size=3, padding=1, bias=False),
             BatchNorm2d(256),
@@ -310,9 +330,9 @@ class ImageDecoder(Module):
             Conv2d(256, classes, kernel_size=1)
         )
 
-
     def forward(self, x):
         return self.params(x)
+
 
 if __name__ == '__main__':
     if torch.cuda.is_available():  # Use GPU if and only if available
