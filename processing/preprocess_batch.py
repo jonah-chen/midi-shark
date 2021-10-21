@@ -1,8 +1,5 @@
 import os
 import numpy as np
-# import matplotlib.pyplot as plt
-import librosa
-import librosa.display
 from preprocess import spectogram_librosa, save_spectrogram
 
 # Access environmental variables
