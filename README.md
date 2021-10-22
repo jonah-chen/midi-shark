@@ -10,14 +10,14 @@
 ## Resources/References
 
 #### Datasets
-- [MAESTRO](magenta.tensorflow.org/datasets/maestro)
-- [MusicNet](homes.cs.washington.edu/~thickstn/start.html)
-- [MAPS](www.telecom-paris.fr/fr/lecole/departements-enseignement-recherche/image-donnees-signal/aao/en/2010/07/08/maps-database-a-piano-database-for-multipitch-estimation-and-automatic-transcription-of-music/) currently unavailable
+- [MAESTRO](https://magenta.tensorflow.org/datasets/maestro)
+- [MusicNet](https://homes.cs.washington.edu/~thickstn/start.html)
+- [MAPS](https://www.telecom-paris.fr/fr/lecole/departements-enseignement-recherche/image-donnees-signal/aao/en/2010/07/08/maps-database-a-piano-database-for-multipitch-estimation-and-automatic-transcription-of-music/) currently unavailable
 
 #### Papers
-- [Onset Frames Paper](arxiv.org/abs/1710.11153)
-- [Transformer Paper](arxiv.org/abs/1706.03762)
-- [DeepLab V3 Paper](arxiv.org/abs/1802.02611)
+- [Onset Frames Paper](https://arxiv.org/abs/1710.11153)
+- [Transformer Paper](https://arxiv.org/abs/1706.03762)
+- [DeepLab V3 Paper](https://arxiv.org/abs/1802.02611)
 
 ## Dataset Default File Structures
 If there are any new datasets added, please update the README with the file structures.
