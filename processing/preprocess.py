@@ -39,10 +39,10 @@ def save_spectrogram(filename, max_duration=20, force = False):
         spectrogram = spectogram_librosa(filename, t, duration, False)
         
         # Clean up file name string
-        name = f"{folder_name}/offset_{t}_duration_{duration}.csv"
+        name = f"{folder_name}/offset_{t}_duration_{duration}"
         
         # Save spectrogram to data folder
-        np.savetxt(name, spectrogram, delimiter=" ")
+        np.save(name, spectrogram)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
