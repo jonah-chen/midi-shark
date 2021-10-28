@@ -11,4 +11,4 @@ pathname = os.environ.get('pathname')
 for file in os.listdir(pathname)[:3]:
     if file.endswith(".wav"):
         filename = pathname + file 
-        save_spectrogram(filename)
+        save_spectrogram(filename, "data/spectrogram_real")

@@ -22,11 +22,11 @@ def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
         plt.show()
     return y
 
-def save_spectrogram(filename, max_duration=20, force = False):
+def save_spectrogram(filename, output_folder, max_duration=20, force = False):
     song_duration = librosa.get_duration(filename = filename)
 
     folder_name = filename.split("/",-1)[-1][:-4]
-    folder_name = f"../data/{folder_name}"
+    folder_name = f"../{output_folder}/{folder_name}"
 
     # Forcibly remove folder and contents if it exists
     if force and os.path.isdir(folder_name):
