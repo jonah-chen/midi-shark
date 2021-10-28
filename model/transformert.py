@@ -25,12 +25,9 @@ class Residualdropout(nn.Module):
 
     def forward(self, *tensors: Tensor) -> Tensor:
         x = self.sublayer(*tensors)
-        #print(self.sublayer(*tensors))
-        #print(torch.is_tensor(tensors[-1]))
         return self.norm(tensors[-1] + self.dropout(x[0]))
 
 class EncoderLayer(nn.Module):
-    #insert dim_k,dim_v
     def __init__(
         self,
         dim_model = 512, 
@@ -80,7 +77,7 @@ class Encoder(nn.Module):
             x = self.layers[i](x)
         return x
 
-
+#Check
 src = torch.rand(64, 16, 512)
 src = torch.tensor(src)
 print(src.shape)
