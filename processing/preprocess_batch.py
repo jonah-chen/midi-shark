@@ -18,24 +18,29 @@ NOTE_GRAPHS_PATH = os.path.join(output_path, 'note_graphs', year) + "/"
 NOTES_GENERATED_PATH = os.path.join(output_path, 'notes_generated', year) + "/"
 SPECTROGRAM_GENERATED_PATH = os.path.join(output_path, 'spectrograms_generated', year) + "/"
 SPECTROGRAM_REAL_PATH = os.path.join(output_path, 'spectrograms_real', year) + "/"
+GENERATED_AUDIO_PATH = os.path.join(output_path, 'generated_audio', year) + "/"
 
 if not os.path.isdir(NOTE_GRAPHS_PATH): os.makedirs(NOTE_GRAPHS_PATH)
 if not os.path.isdir(NOTES_GENERATED_PATH): os.makedirs(NOTES_GENERATED_PATH)
 if not os.path.isdir(SPECTROGRAM_GENERATED_PATH): os.makedirs(SPECTROGRAM_GENERATED_PATH)
 if not os.path.isdir(SPECTROGRAM_REAL_PATH): os.makedirs(SPECTROGRAM_REAL_PATH)
+if not os.path.isdir(GENERATED_AUDIO_PATH): os.makedirs(GENERATED_AUDIO_PATH)
 
 for file in os.listdir(input_path)[:3]:
     if file.endswith(".wav"):
         filename = input_path + file
-        save_spectrogram(filename, SPECTROGRAM_REAL_PATH)
+        save_spectrogram(filename, SPECTROGRAM_REAL_PATH, file)
     
     if file.endswith(".midi"):
-        # # Generate Notes
+        # Generate Notes
         filename = input_path + file
         save_midi(filename, NOTES_GENERATED_PATH, file) 
 
         # Generate Spectrogram
-        fs.midi_to_audio(filename, SPECTROGRAM_REAL_PATH)
+        fs.midi_to_audio(filename, GENERATED_AUDIO_PATH + file.replace(".midi", ".wav"))
+        generated_filename = GENERATED_AUDIO_PATH + file.replace(".midi", ".wav")
+        generated_file = file.replace(".midi", ".wav")
+        save_spectrogram(generated_filename, SPECTROGRAM_GENERATED_PATH, generated_file)
 
         filename_csv = NOTES_GENERATED_PATH + file[:-5] + ".csv"
         notes = np.loadtxt(filename_csv, delimiter=",", dtype=str)
