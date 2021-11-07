@@ -26,7 +26,7 @@ if not os.path.isdir(SPECTROGRAM_GENERATED_PATH): os.makedirs(SPECTROGRAM_GENERA
 if not os.path.isdir(SPECTROGRAM_REAL_PATH): os.makedirs(SPECTROGRAM_REAL_PATH)
 if not os.path.isdir(GENERATED_AUDIO_PATH): os.makedirs(GENERATED_AUDIO_PATH)
 
-for file in os.listdir(input_path)[:3]:
+for file in os.listdir(input_path):
     if file.endswith(".wav"):
         # Generate Spectrogram from Raw Audio
         filename = input_path + file
