@@ -28,6 +28,7 @@ if not os.path.isdir(GENERATED_AUDIO_PATH): os.makedirs(GENERATED_AUDIO_PATH)
 
 for file in os.listdir(input_path)[:3]:
     if file.endswith(".wav"):
+        # Generate Spectrogram from Raw Audio
         filename = input_path + file
         save_spectrogram(filename, SPECTROGRAM_REAL_PATH, file)
     
@@ -36,12 +37,13 @@ for file in os.listdir(input_path)[:3]:
         filename = input_path + file
         save_midi(filename, NOTES_GENERATED_PATH, file) 
 
-        # Generate Spectrogram
+        # Generate Spectrogram from Midi File
         fs.midi_to_audio(filename, GENERATED_AUDIO_PATH + file.replace(".midi", ".wav"))
         generated_filename = GENERATED_AUDIO_PATH + file.replace(".midi", ".wav")
         generated_file = file.replace(".midi", ".wav")
         save_spectrogram(generated_filename, SPECTROGRAM_GENERATED_PATH, generated_file)
 
+        # Generate Note Graph
         filename_csv = NOTES_GENERATED_PATH + file[:-5] + ".csv"
         notes = np.loadtxt(filename_csv, delimiter=",", dtype=str)
 

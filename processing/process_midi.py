@@ -6,6 +6,9 @@ from mido import MidiFile
 import os
 
 def midi2labels(midi_file_path):
+    '''
+        Convert midi file to a list of notes.
+    '''
     NoteState = namedtuple('NoteState', 'start velocity')
     mid = MidiFile(midi_file_path)
     note_states = [None] * 128
@@ -47,6 +50,9 @@ def midi2labels(midi_file_path):
     return durations_by_note
 
 def save_midi(filename, output_name, file):
+    '''
+        Save the midi file to a csv file.
+    '''
     a = midi2labels(filename)
     output = output_name + file
     output = output[:-5] + ".csv"
@@ -60,6 +66,10 @@ def save_midi(filename, output_name, file):
     return a
 
 def save_notes(notes, folder_name, file):
+    '''
+        Convert notes file into graphs of multiple 20s intervals and saves it
+        to folder_name.
+    '''
     max_duration = max([float(i) for i in notes[1:,2]])
     notes_spectrogram = np.zeros((229,int(max_duration)))
 
@@ -97,12 +107,11 @@ def save_notes(notes, folder_name, file):
         output_name = output_folder_name+"/offset_"+str(i*20)+".0_duration_20"
         np.save(output_name, notes_spectrogram_final)
 
-# Convert note to frequency
 def f_to_mel(n):
+    '''
+        Convert note to frequency using the mel scale.
+    '''
     frequency = 440 * 2**((n-69)/12)
-    # Normalize frequency between 0 and 1
-    # frequency = 7.529e-5*(frequency-8.175798916)
-    
     # Convert frequency to mel scale
     mel = 175.28862145395186*np.log10(1+frequency/700)
 
