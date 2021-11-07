@@ -3,3 +3,4 @@ librosa==0.8.1
 numpy==1.21.2
 python-dotenv==0.17.1
 mido==1.2
+midi2audio==0.1.1
