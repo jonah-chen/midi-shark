@@ -7,7 +7,7 @@ import os
 
 def midi2labels(midi_file_path):
     '''
-        Convert midi file to a list of notes.
+    Convert midi file to a list of notes.
     '''
     NoteState = namedtuple('NoteState', 'start velocity')
     mid = MidiFile(midi_file_path)
@@ -50,25 +50,26 @@ def midi2labels(midi_file_path):
     return durations_by_note
 
 def save_midi(filename, output_name, file):
-    '''
-        Save the midi file to a csv file.
-    '''
-    a = midi2labels(filename)
-    output = output_name + file
-    output = output[:-5] + ".csv"
-    with open(output, 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(['note', 'start', 'end', 'velocity'])
-        for note, durations in enumerate(a):
-            for (start, end, velocity) in durations:
-                writer.writerow([note, start, end, velocity])
+    """
+    Save the midi file to a .npy file with a numpy array of:
+        shape=(num_notes, 4,)
+    where each row is [note, start_time, end_time, velocity]        
+    """
+    durations_by_note = midi2labels(filename)
+    output = (output_name + file)[:-5]
+    arr = np.zeros((4))
 
-    return a
+    for notes, durations in enumerate(durations_by_note):
+        for (start, end, velocity) in durations:
+            row = np.array([note,start,end,velocity])
+            arr = np.vstack((arr,row))
+    np.save(output, arr[1:])
+
 
 def save_notes(notes, folder_name, file):
     '''
-        Convert notes file into graphs of multiple 20s intervals and saves it
-        to folder_name.
+    Convert notes file into graphs of multiple 20s intervals and saves it
+    to folder_name.
     '''
     max_duration = max([float(i) for i in notes[1:,2]])
     notes_spectrogram = np.zeros((229,int(max_duration)))
@@ -109,7 +110,7 @@ def save_notes(notes, folder_name, file):
 
 def f_to_mel(n):
     '''
-        Convert note to frequency using the mel scale.
+    Convert note to frequency using the mel scale.
     '''
     frequency = 440 * 2**((n-69)/12)
     # Convert frequency to mel scale
