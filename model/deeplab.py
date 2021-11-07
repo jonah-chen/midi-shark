@@ -306,7 +306,7 @@ class DeepLabv3Encoder(Module):
 
         x = torch.cat((x, y), 1)
 
-        return F.interpolate(x, scale_factor=4, mode="bilinear")
+        return x
 
 
 class ImageDecoder(Module):
@@ -331,7 +331,9 @@ class ImageDecoder(Module):
         )
 
     def forward(self, x):
-        return self.params(x)
+        x = self.params(x)
+        x = F.interpolate(x, scale_factor=4, mode="bilinear")
+        return x
 
 
 if __name__ == '__main__':
