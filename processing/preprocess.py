@@ -22,11 +22,8 @@ def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
         plt.show()
     return y
 
-def save_spectrogram(filename, output_folder, max_duration=20, force = False):
+def save_spectrogram(filename, folder_name, max_duration=20, force = False):
     song_duration = librosa.get_duration(filename = filename)
-
-    folder_name = filename.split("/",-1)[-1][:-4]
-    folder_name = f"../{output_folder}/{folder_name}"
 
     # Forcibly remove folder and contents if it exists
     if force and os.path.isdir(folder_name):
@@ -37,7 +34,7 @@ def save_spectrogram(filename, output_folder, max_duration=20, force = False):
     for t in np.arange(0, song_duration, max_duration):
         duration = min(max_duration, np.floor(song_duration - t))
         spectrogram = spectogram_librosa(filename, t, duration, False)
-        
+
         # Clean up file name string
         name = f"{folder_name}/offset_{t}_duration_{duration}"
         
