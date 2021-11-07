@@ -5,3 +5,4 @@ python-dotenv==0.17.1
 mido==1.2
 midi2audio==0.1.1
 tqdm==4.62.2
+torch==1.8.2
