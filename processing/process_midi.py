@@ -1,8 +1,17 @@
 import argparse
-import csv
 from collections import namedtuple
 
+import numpy as np
+
 from mido import MidiFile
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--midi_file', help='.midi file to parse', type=str)
+    parser.add_argument('-o', '--out_path', help='name of the npy file',
+                        type=str, default='out.npy')
+    return parser.parse_args()
 
 
 def midi2labels(midi_file_path):
@@ -48,15 +57,16 @@ def midi2labels(midi_file_path):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--midi_file', help='.midi file to parse', type=str)
-    parser.add_argument('-o', '--out_csv_path', help='name of the csv file',
-                        type=str, default='out.csv')
-    args = parser.parse_args()
+    args = get_args()
+
     durations_by_note = midi2labels(args.midi_file)
-    with open(args.out_csv_path, 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(['note', 'start', 'end', 'velocity'])
-        for note, durations in enumerate(durations_by_note):
-            for (start, end, velocity) in durations:
-                writer.writerow([note, start, end, velocity])
+
+    arr = None
+    for note, durations in enumerate(durations_by_note):
+        for (start, end, velocity) in durations:
+            row = np.array([note, start, end, velocity])
+            if arr is None:
+                arr = row
+            else:
+                arr = np.vstack((arr, row))
+    np.save(args.out_path, arr)
