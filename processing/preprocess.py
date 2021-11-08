@@ -7,11 +7,12 @@ import numpy as np
 import os
 import shutil
 
-def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
+
+def spectogram_librosa(wav_file_path, offset=0, duration=20, show=False):
     '''
         Returns a spectrogram of the given wav file as a numpy array
     '''
-    y, sr = librosa.load(wav_file_path, offset = offset, duration = duration)
+    y, sr = librosa.load(wav_file_path, offset=offset, duration=duration)
     y = librosa.feature.melspectrogram(
         y=y,  # audio time-series
         sr=16000,  # sampling rate of y
@@ -25,7 +26,8 @@ def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
         plt.show()
     return y
 
-def save_spectrogram(filename, folder_path, file, max_duration=20, force = False):
+
+def save_spectrogram(filename, folder_path, file, max_duration=20, force=False):
     '''
         Converts and saves the spectrogram of the given wav file to numerous files
         inside a specified folder.
@@ -34,7 +36,7 @@ def save_spectrogram(filename, folder_path, file, max_duration=20, force = False
         folder_path - the path to the folder where the spectrogram folder is stored
         file - the name of the audio file
     '''
-    song_duration = librosa.get_duration(filename = filename)
+    song_duration = librosa.get_duration(filename=filename)
 
     # Forcibly remove folder and contents if it exists
     folder_name = f"{folder_path}/{file[:-4]}"
@@ -49,9 +51,10 @@ def save_spectrogram(filename, folder_path, file, max_duration=20, force = False
 
         # Clean up file name string
         name = f"{folder_name}/offset_{t}_duration_{duration}"
-        
+
         # Save spectrogram to data folder
         np.save(name, spectrogram)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
