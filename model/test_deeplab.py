@@ -12,7 +12,6 @@ from torch.utils.checkpoint import checkpoint
 import os
 from random import randint
 import numpy as np
-from constants import *
 from tqdm import tqdm
 
 
@@ -33,7 +32,7 @@ class Cityscapes(datasets.Cityscapes):
 
         return inp, torch.Tensor(np.asarray(target)).long()
 
-EPOCHS = 5
+EPOCHS = 100
 
 class DeeplabV3(Module):
     def __init__(self):
@@ -56,19 +55,28 @@ if __name__ == '__main__':
     data = Cityscapes('/media/hina/LinuxStorage/Datasets/cityscapes', 
                      target_type='semantic', 
                      transform=transforms.ToTensor())
+    val_data = Cityscapes('/media/hina/LinuxStorage/Datasets/cityscapes',
+                            target_type='semantic',
+                            split='val',
+                            transform=transforms.ToTensor())
 
     loader = DataLoader(data, batch_size=16, shuffle=True, num_workers=24)
+    val_loader = DataLoader(val_data, batch_size=16, shuffle=True, num_workers=24)
 
     model = DeeplabV3()
     model.cuda()
     criterion = CrossEntropyLoss()
     optimizer = SGD(model.parameters(), 
-                    lr=0.045, 
+                    lr=0.09, 
                     momentum=0.9)
     print(sum(p.numel() for p in model.parameters()))
 
-    for _ in range(EPOCHS):
-        for _, (img, label) in tqdm(enumerate(loader), total=len(loader)):
+    for epoch in range(EPOCHS):
+        # start summing up the loss over epoch
+        epoch_iou = 0
+        epoch_loss = 0
+        for _, (img, label) in tqdm(enumerate(loader), 
+                                    total=len(loader)):
             img,label = img.cuda(),label.cuda()
             out = model(img)
             loss = criterion(out, label)
@@ -76,6 +84,47 @@ if __name__ == '__main__':
             # print(loss)
             loss.backward()
             optimizer.step()
-            # print(loss.item())
-            # del out, loss, img, label
-            # torch.cuda.empty_cache()
+
+            pred_label = torch.argmax(out,axis=1)
+            
+            batch_iou = 0
+            for class_num in range(34):
+                pp = pred_label == class_num
+                tt = label == class_num
+                batch_iou += torch.sum(pp & tt).item() / (torch.sum(pp | tt).item() + 1e-8)
+            batch_iou /= 34
+            # print(batch_iou)
+            epoch_iou += batch_iou
+            epoch_loss += loss.item()
+
+        # perform validation on the validation set
+        val_iou = 0
+        val_loss = 0
+        with torch.no_grad():
+            for _, (img, label) in enumerate(val_loader):
+                img,label = img.cuda(),label.cuda()
+                out = model(img)
+                loss = criterion(out, label)
+                pred_label = torch.argmax(out,axis=1)
+                
+                batch_iou = 0
+                for class_num in range(34):
+                    pp = pred_label == class_num
+                    tt = label == class_num
+                    batch_iou += torch.sum(pp & tt).item() / (torch.sum(pp | tt).item() + 1e-8)
+                batch_iou /= 34
+                # print(batch_iou)
+                val_iou += batch_iou
+                val_loss += loss.item()
+
+        # report epoch loss
+        epoch_loss /= len(loader)
+        epoch_iou /= len(loader)
+        print('Epoch: {} | Loss: {} | IoU: {}'.format(epoch+1, epoch_loss, epoch_iou))
+        # report validation loss
+        val_loss /= len(val_loader)
+        val_iou /= len(val_loader)
+        print('Validation Loss: {} | Validation IoU: {}'.format(val_loss, val_iou))
+    
+    # save the model to model_dir
+    torch.save(model.state_dict(), 'model.pth')
