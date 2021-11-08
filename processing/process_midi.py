@@ -55,14 +55,14 @@ def save_midi(filename, output_name, file):
         shape=(num_notes, 4,)
     where each row is [note, start_time, end_time, velocity]        
     """
-    durations_by_note = midi2labels(filename)
-    output = (output_name + file)[:-5]
+    a = midi2labels(filename)
+    output = output_name + file
+    output = output[:-5]
     arr = np.zeros((4))
-
-    for notes, durations in enumerate(durations_by_note):
+    for note, durations in enumerate(a):
         for (start, end, velocity) in durations:
-            row = np.array([note,start,end,velocity])
-            arr = np.vstack((arr,row))
+            row = np.array([note, start, end, velocity])
+            arr = np.vstack((arr, row))
     np.save(output, arr[1:])
 
 
