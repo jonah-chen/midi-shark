@@ -120,9 +120,8 @@ def preprocess_file(input_path, output_path, year, file):
                          SPECTROGRAM_GENERATED_PATH, generated_file)
 
         # Generate Note Graph
-        filename_csv = NOTES_GENERATED_PATH + file[:-5] + ".csv"
-        notes = np.loadtxt(filename_csv, delimiter=",", dtype=str)
-
+        filename_npy = NOTES_GENERATED_PATH + file[:-5] + ".npy"
+        notes = np.load(filename_npy)
         save_notes(notes, NOTE_GRAPHS_PATH, file)
 
 
