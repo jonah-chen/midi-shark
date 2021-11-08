@@ -25,7 +25,7 @@ class DeNoiseDataset(Dataset):
         self.real = {}
 
         SPECTROGRAM_GENERATED_PATH = data_folder + '/spectrograms_generated/'
-        NOTE_GRAPH_PATH = data_folder + '/spectrograms_real/'
+        SPECTROGRAM_REAL_PATH = data_folder + '/spectrograms_real/'
 
         # Get all the spectrograms in spectrograms_generated
         for year in os.listdir(SPECTROGRAM_GENERATED_PATH):
@@ -36,12 +36,12 @@ class DeNoiseDataset(Dataset):
                         self.generated[file_name] = np.load(SPECTROGRAM_GENERATED_PATH + "/" + year + '/' + song + '/' + file)
 
         # Get all the spectrograms in spectrograms_real
-        for year in os.listdir(NOTE_GRAPH_PATH):
-            for song in os.listdir(NOTE_GRAPH_PATH + "/" + year):
-                for file in os.listdir(NOTE_GRAPH_PATH + "/" + year + '/' + song):
+        for year in os.listdir(SPECTROGRAM_REAL_PATH):
+            for song in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year):
+                for file in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song):
                     if file.split('.')[-1] == "npy":
                         file_name = year + "_" + song + "_" + file
-                        self.real[file_name] = np.load(NOTE_GRAPH_PATH + "/" + year + '/' + song + '/' + file)
+                        self.real[file_name] = np.load(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song + '/' + file)
 
     def __len__(self):
         return len(self.real)
