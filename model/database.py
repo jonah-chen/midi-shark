@@ -31,7 +31,7 @@ class DeNoiseDataset(Dataset):
         for year in os.listdir(SPECTROGRAM_GENERATED_PATH):
             for song in os.listdir(SPECTROGRAM_GENERATED_PATH + "/" + year):
                 for file in os.listdir(SPECTROGRAM_GENERATED_PATH + "/" + year + '/' + song):
-                    if file.split('.')[-1] == "npy":
+                    if file.endswith("20.npy"): # Ignore the end of the song (if less than 20s)
                         file_name = year + "_" + song + "_" + file
                         self.generated[file_name] = np.load(SPECTROGRAM_GENERATED_PATH + "/" + year + '/' + song + '/' + file)
 
@@ -39,7 +39,7 @@ class DeNoiseDataset(Dataset):
         for year in os.listdir(SPECTROGRAM_REAL_PATH):
             for song in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year):
                 for file in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song):
-                    if file.split('.')[-1] == "npy":
+                    if file.endswith("20.npy"): # Ignore the end of the song (if less than 20s)
                         file_name = year + "_" + song + "_" + file
                         self.real[file_name] = np.load(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song + '/' + file)
 
@@ -77,7 +77,7 @@ class SpectrogramNotesDataset(Dataset):
         for year in os.listdir(SPECTROGRAM_REAL_PATH):
             for song in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year):
                 for file in os.listdir(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song):
-                    if file.split('.')[-1] == "npy":
+                    if file.endswith("20.npy"): # Ignore the end of the song (if less than 20s)
                         file_name = year + "_" + song + "_" + file
                         self.generated[file_name] = np.load(SPECTROGRAM_REAL_PATH + "/" + year + '/' + song + '/' + file)
 
@@ -85,7 +85,7 @@ class SpectrogramNotesDataset(Dataset):
         for year in os.listdir(NOTE_GRAPH_PATH):
             for song in os.listdir(NOTE_GRAPH_PATH + "/" + year):
                 for file in os.listdir(NOTE_GRAPH_PATH + "/" + year + '/' + song):
-                    if file.split('.')[-1] == "npy":
+                    if file.endswith("20.npy"): # Ignore the end of the song (if less than 20s)
                         file_name = year + "_" + song + "_" + file
                         self.real[file_name] = np.load(NOTE_GRAPH_PATH + "/" + year + '/' + song + '/' + file)
 
@@ -105,4 +105,4 @@ class SpectrogramNotesDataset(Dataset):
 
 if __name__ == '__main__':
     dataset = DeNoiseDataset(output_path)
-    print(dataset[0])
+    print(len(dataset))
