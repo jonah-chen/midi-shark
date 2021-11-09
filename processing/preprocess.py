@@ -47,13 +47,17 @@ def save_spectrogram(filename, folder_path, file, max_duration=20, force=False):
 
     for t in np.arange(0, song_duration, max_duration):
         duration = min(max_duration, np.floor(song_duration - t))
-        spectrogram = spectogram_librosa(filename, t, duration, False)
 
-        # Clean up file name string
-        name = f"{folder_name}/offset_{t}_duration_{duration}"
+        # There is really no point to process something with too short duration
+        # it also errors out librosa
+        if duration > 0.2:
+            spectrogram = spectogram_librosa(filename, t, duration, False)
 
-        # Save spectrogram to data folder
-        np.save(name, spectrogram)
+            # Clean up file name string
+            name = f"{folder_name}/offset_{t}_duration_{duration}"
+
+            # Save spectrogram to data folder
+            np.save(name, spectrogram)
 
 
 if __name__ == '__main__':
