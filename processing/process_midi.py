@@ -46,6 +46,8 @@ def midi2labels(midi_file_path):
             elif msg.type == 'end_of_track':
                 # track ends here
                 continue
+            elif msg.type == 'track_name':
+                continue
             else:
                 print(f'unhandled message type {msg.type}')
     return durations_by_note
