@@ -6,6 +6,7 @@ Make sure that requirements in `requirements.txt` are installed, or run
 ```
 pip install -r requirements.txt
 ```
+Then, make sure you have [FluidSynth](https://www.fluidsynth.org/) and a `.sf2` soundfont installed.
 
 #### Preprocessing the Data. 
 1. Create a file named `.env` in the project's root directory, following the template shown in the `.env.example` file.

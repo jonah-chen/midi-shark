@@ -27,10 +27,11 @@ from midi2audio import FluidSynth
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 
-fs = FluidSynth()
-
 # Access environmental variables
 load_dotenv(verbose=True)
+
+# Initialize FluidSynth
+fs = FluidSynth(sound_font=os.environ.get('soundfont'))
 
 
 def prepare_dirs(input_path, output_path, year):
