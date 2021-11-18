@@ -12,18 +12,22 @@ input_path = os.environ.get('pathname')
 output_path = os.environ.get('dataname')
 
 # Return a dictionary of file names
-def get_file_names(path):
-    file_names = {}
-    for year in os.listdir(path):
-        for song in os.listdir(path + "/" + year):
-            if not song in {'MIDI-Unprocessed_043_PIANO043_MID--AUDIO-split_07-06-17_Piano-e_1-03_wav--4', 'MIDI-Unprocessed_050_PIANO050_MID--AUDIO-split_07-06-17_Piano-e_3-01_wav--3', 'MIDI-Unprocessed_041_PIANO041_MID--AUDIO-split_07-06-17_Piano-e_1-01_wav--3', 'MIDI-Unprocessed_081_PIANO081_MID--AUDIO-split_07-09-17_Piano-e_2_-02_wav--4', 'MIDI-Unprocessed_03_R1_2009_03-08_ORIG_MID--AUDIO_03_R1_2009_03_R1_2009_08_WAV'}:
-                for file in os.listdir(path + "/" + year + "/" + song):
+def get_file_names(real_path, gen_path):
+    real_file_names, gen_file_names = {}, {}
+    for year in os.listdir(real_path):
+        real_songs = os.listdir(os.path.join(real_path, year))
+        gen_songs = os.listdir(os.path.join(gen_path, year))
+        for song in real_songs:
+            if song in gen_songs:
+                gen_file_dir = os.listdir(os.path.join(gen_path, year, song))
+                real_file_dir = os.listdir(os.path.join(real_path, year, song))
+                for file in real_file_dir:
                     # Ignore the end of the song (if less than 20s)
-                    if file.endswith("20.npy"):
-                        file_name = year + "_" + song + "_" + file
-                        file_names[file_name] = path + "/" + year + "/" + song + "/" + file
-
-    return file_names
+                    if file.endswith("20.npy") and file in gen_file_dir:
+                        file_name = f"{year}_{song}_{file}"
+                        real_file_names[file_name] = os.path.join(real_path, year, song, file)
+                        gen_file_names[file_name] = os.path.join(gen_path, year, song, file)
+    return real_file_names, gen_file_names
 
 class DeNoiseDataset(Dataset):
     """
@@ -38,11 +42,12 @@ class DeNoiseDataset(Dataset):
         self.generated = {}
         self.real = {}
 
-        SPECTROGRAM_GENERATED_PATH = data_folder + '/spectrograms_generated/'
-        SPECTROGRAM_REAL_PATH = data_folder + '/spectrograms_real/'
+        SPECTROGRAM_GENERATED_PATH = os.path.join(data_folder, 'spectrograms_generated')
+        SPECTROGRAM_REAL_PATH = os.path.join(data_folder + 'spectrograms_real')
 
-        self.generated = get_file_names(SPECTROGRAM_GENERATED_PATH)
-        self.real = get_file_names(SPECTROGRAM_REAL_PATH)
+        self.real, self.generated = get_file_names(SPECTROGRAM_REAL_PATH, SPECTROGRAM_GENERATED_PATH)
+        assert(len(self.real) == len(self.generated))
+        assert(len(self.real))
 
     def __len__(self):
         return len(self.real)
@@ -95,6 +100,6 @@ class SpectrogramNotesDataset(Dataset):
 if __name__ == '__main__':
     dataset = DeNoiseDataset(output_path)
     from torch.utils.data import DataLoader
-    data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=24)
     for i, sample in enumerate(data_loader):
         print(i, sample['real'].shape, sample['generated'].shape)
