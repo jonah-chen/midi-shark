@@ -16,11 +16,12 @@ def get_file_names(path):
     file_names = {}
     for year in os.listdir(path):
         for song in os.listdir(path + "/" + year):
-            for file in os.listdir(path + "/" + year + "/" + song):
-                # Ignore the end of the song (if less than 20s)
-                if file.endswith("20.npy"):
-                    file_name = year + "_" + song + "_" + file
-                    file_names[file_name] = path + "/" + year + "/" + song + "/" + file
+            if not song in {'MIDI-Unprocessed_043_PIANO043_MID--AUDIO-split_07-06-17_Piano-e_1-03_wav--4', 'MIDI-Unprocessed_050_PIANO050_MID--AUDIO-split_07-06-17_Piano-e_3-01_wav--3', 'MIDI-Unprocessed_041_PIANO041_MID--AUDIO-split_07-06-17_Piano-e_1-01_wav--3', 'MIDI-Unprocessed_081_PIANO081_MID--AUDIO-split_07-09-17_Piano-e_2_-02_wav--4', 'MIDI-Unprocessed_03_R1_2009_03-08_ORIG_MID--AUDIO_03_R1_2009_03_R1_2009_08_WAV'}:
+                for file in os.listdir(path + "/" + year + "/" + song):
+                    # Ignore the end of the song (if less than 20s)
+                    if file.endswith("20.npy"):
+                        file_name = year + "_" + song + "_" + file
+                        file_names[file_name] = path + "/" + year + "/" + song + "/" + file
 
     return file_names
 
@@ -93,5 +94,7 @@ class SpectrogramNotesDataset(Dataset):
 
 if __name__ == '__main__':
     dataset = DeNoiseDataset(output_path)
-    print(len(dataset))
-    print(dataset[0])
+    from torch.utils.data import DataLoader
+    data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    for i, sample in enumerate(data_loader):
+        print(i, sample['real'].shape, sample['generated'].shape)
