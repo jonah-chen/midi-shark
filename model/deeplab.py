@@ -4,6 +4,7 @@ from torch.nn import Sequential
 from torch.nn import Conv2d, BatchNorm2d, ReLU, AdaptiveAvgPool2d, Upsample
 import torch.nn.functional as F
 import math
+from torch.utils.checkpoint import checkpoint, checkpoint_sequential
 
 
 class SepearableConv2d(Module):
@@ -242,11 +243,11 @@ class DeepLabv3Encoder(Module):
     Author: Jonah Chen
     """
 
-    def __init__(self):
+    def __init__(self, in_channels=1):
         super(DeepLabv3Encoder, self).__init__()
 
         self.entry_flow1 = Sequential(
-            Conv2d(3, 32, kernel_size=3, stride=2, padding=1,
+            Conv2d(in_channels, 32, kernel_size=3, stride=2, padding=1,
                    bias=False),
             BatchNorm2d(32),
             ReLU(),
@@ -295,14 +296,13 @@ class DeepLabv3Encoder(Module):
         x = self.entry_flow1(x)
         x, y = self.entry_4x(x)
         x = self.entry_flow2(x)
-        x = self.middle_flow(x)
+        x = checkpoint(self.middle_flow,x)
         x = self.exit_flow(x)
         x = self.spp(x)
 
         x = F.relu(self.encode_bn(self.encode_conv(x)))
-        x = F.interpolate(x, scale_factor=4, mode="bilinear")
-
         y = F.relu(self.low_encode_bn(self.low_encode_conv(y)))
+        x = F.interpolate(x, size=y.shape[2:], mode="bilinear")
 
         x = torch.cat((x, y), 1)
 
@@ -318,8 +318,9 @@ class ImageDecoder(Module):
     Author: Jonah Chen
     """
 
-    def __init__(self, classes):
+    def __init__(self, classes, out_size=(229,862)):
         super(ImageDecoder, self).__init__()
+        self.out_size = out_size
         self.params = Sequential(
             Conv2d(256+48, 256, kernel_size=3, padding=1, bias=False),
             BatchNorm2d(256),
@@ -332,7 +333,7 @@ class ImageDecoder(Module):
 
     def forward(self, x):
         x = self.params(x)
-        x = F.interpolate(x, scale_factor=4, mode="bilinear")
+        x = F.interpolate(x, size=self.out_size, mode="bilinear")
         return x
 
 

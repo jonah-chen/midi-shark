@@ -29,7 +29,6 @@ class Cityscapes(datasets.Cityscapes):
         inp = Cityscapes.t(inp)
         torch.manual_seed(seed)
         target = Cityscapes.t(target)
-
         return inp, torch.Tensor(np.asarray(target)).long()
 
 EPOCHS = 100
@@ -37,12 +36,12 @@ EPOCHS = 100
 class DeeplabV3(Module):
     def __init__(self):
         super(DeeplabV3, self).__init__()
-        self.encoder = DeepLabv3Encoder()
-        self.decoder = ImageDecoder(34)
+        self.encoder = DeepLabv3Encoder(3)
+        self.decoder = ImageDecoder(34, out_size=(512,512))
 
     def forward(self, x):
         # checkpoint the model
-        x = checkpoint(self.encoder, x, preserve_rng_state=False)
+        x = self.encoder(x)
         x = self.decoder(x)
         return x
 
@@ -60,8 +59,8 @@ if __name__ == '__main__':
                             split='val',
                             transform=transforms.ToTensor())
 
-    loader = DataLoader(data, batch_size=16, shuffle=True, num_workers=24)
-    val_loader = DataLoader(val_data, batch_size=16, shuffle=True, num_workers=24)
+    loader = DataLoader(data, batch_size=4, shuffle=True, num_workers=24)
+    val_loader = DataLoader(val_data, batch_size=4, shuffle=True, num_workers=24)
 
     model = DeeplabV3()
     model.cuda()
@@ -75,9 +74,10 @@ if __name__ == '__main__':
         # start summing up the loss over epoch
         epoch_iou = 0
         epoch_loss = 0
-        for _, (img, label) in tqdm(enumerate(loader), 
-                                    total=len(loader)):
+        iterable_loader = tqdm(enumerate(loader), total=len(loader))
+        for i, (img, label) in iterable_loader:
             img,label = img.cuda(),label.cuda()
+            img.requires_grad = True
             out = model(img)
             loss = criterion(out, label)
             optimizer.zero_grad()
@@ -96,6 +96,7 @@ if __name__ == '__main__':
             # print(batch_iou)
             epoch_iou += batch_iou
             epoch_loss += loss.item()
+            iterable_loader.set_postfix(ordered_dict={'IoUm': epoch_iou/(i+1), 'IoU': batch_iou, 'loss': loss.item()})
 
         # perform validation on the validation set
         val_iou = 0
