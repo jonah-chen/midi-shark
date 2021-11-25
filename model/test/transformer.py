@@ -5,17 +5,8 @@ import math
 
 class PositionalEmbedding(nn.Module):
     """
-    Layer for positionally encoding sequences using the procedure
+    A layer for positionally encoding tensors using the procedure
     described in section 3.5 of "Attention Is All You Need".
-
-    `Each dimension of the positional encoding corresponds to a
-    sinusoid. The wavelengths form a geometric progression from 2pi
-    to 10000 * 2pi.`
-
-    This, the dimension of the model is not as relevent as the 
-    dimension of the embeddings. 
-
-    Author: Jonah Chen
     """
 
     # A hashtable can be used to save the calculated sin/cos to avoid recomputation
@@ -32,42 +23,46 @@ class PositionalEmbedding(nn.Module):
         """ 
         The pytorch neural network forward function.
 
-        Params:
-            x: Input batch of sequences of tokens, each token is a vector.
-               such that x.shape = (batch_sz, tokens, d_emb)
+        Inputs:
+            x: Input batch of sequences of tokens, each token is a vector. i.e. rank3 tensor
+            [x.shape = (batch_sz, tokens, dims per token)]
 
-        Returns:
-            y: Tensor with the same shape as x, such that `y = x + PE` where:
-                
-                `PE(pos, 2i)   = sin(pos / 10000^(2i/d_emb))`
-                `PE(pos, 2i+1) = cos(pos / 10000^(2i/d_emb))`
-                
-                with 
-                pos: position of the token
-                i:   the i-th element of the vector of the token at position pos)
+        Outputs:
+            Tensor y with the same shape as x, such that `y = x + PE` where
+                `PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))`
+                `PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))`
+                meaning:
+                    pos: position of the token
+                    i:   the i-th element of the vector of the token at position pos
+        Notes to self:
+            Sin and Cos are expensive, power is expensive. 
+            Adds/Multiplies are cheap. Division is bad. 
+            Vectorize everything. Loops == BAD.
+            Use log 10000.
         """
-        batch_size, n_tokens, d_emb = x.shape  # get input parameters
+        batch_size, n_tokens, d_model = x.shape  # get input parameters
 
         if x.shape in PositionalEmbedding.hashtable:  # reuse the embeddings that are already generated
-            return x + PositionalEmbedding.hashtable[(n_tokens, d_emb)].repeat(batch_size, 1, 1)
+            return x + PositionalEmbedding.hashtable[(n_tokens, d_model)].repeat(batch_size, 1, 1)
 
-        # half the dimension of input because there is both sine and cosine
-        num_trigs = (d_emb+1)//2
+        # half the dimension of model because there is both sine and cosine
+        num_trigs = (d_model+1)//2
         # also account for odd and even cases
 
-        _y = -math.log(10000) / d_emb  # log table magic
+        _y = -math.log(10000) / d_model  # log table magic
 
         # Manual outer product is faster & require less intermediate variables than `torch.outer`
         _y = torch.exp(2*torch.arange(num_trigs)*_y).unsqueeze(0)
         _y = torch.arange(n_tokens).unsqueeze(1) * _y
 
-        y = torch.empty((n_tokens, d_emb))
+        y = torch.empty((n_tokens, d_model))
         y[:, 0::2] = torch.sin(_y)
-        y[:, 1::2] = torch.cos(_y[:, :num_trigs-(d_emb % 2)])
+        y[:, 1::2] = torch.cos(_y[:, :num_trigs-(d_model % 2)])
 
         if PositionalEmbedding.use_hashtable:
-            PositionalEmbedding.hashtable[(n_tokens, d_emb)] = y
+            PositionalEmbedding.hashtable[(n_tokens, d_model)] = y
         return x + y.repeat(batch_size, 1, 1)
+
 
 if __name__ == '__main__':
     """
