@@ -107,7 +107,6 @@ if __name__ == '__main__':
         for filename in os.listdir(os.path.join(notes_root, year)):
             input_path = os.path.join(notes_root, year, filename)
             notes = np.load(input_path)
-            print(filename)
 
             with ProcessPoolExecutor(max_workers=24) as executor:
                 executor.submit(save_onsets, notes, os.path.join(
