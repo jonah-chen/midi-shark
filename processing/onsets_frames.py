@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from dotenv import load_dotenv
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 
 def divide_notes(notes, folder_name, name, hop_length=20):
@@ -15,9 +15,10 @@ def divide_notes(notes, folder_name, name, hop_length=20):
         name (str): Name of the file (i.e. "frames")
         hop_length (int, optional): Hop length in milliseconds. Defaults to 20.
     '''
-    for i in np.arange(0, notes.shape[1], int(20*1000/hop_length)):
+    segment_length = int(20*1000/hop_length)
+    for i in np.arange(0, notes.shape[1] - segment_length, segment_length):
         t_start = int(i)
-        t_end = int(i+20*1000/hop_length)
+        t_end = t_start + segment_length
         notes_spectrogram_final = notes[:, t_start:t_end]
 
         if not os.path.isdir(folder_name):
@@ -108,7 +109,8 @@ if __name__ == '__main__':
             input_path = os.path.join(notes_root, year, filename)
             notes = np.load(input_path)
 
-            with ProcessPoolExecutor(max_workers=24) as executor:
+            filename = filename[:-4]
+            with ThreadPoolExecutor() as executor:
                 executor.submit(save_onsets, notes, os.path.join(
                     data_root, "onsets", year, filename))
                 executor.submit(save_velocities, notes, os.path.join(
