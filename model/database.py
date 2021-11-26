@@ -12,6 +12,8 @@ input_path = os.environ.get('pathname')
 output_path = os.environ.get('dataname')
 
 # Return a dictionary of file names
+
+
 def get_file_names(real_path, gen_path):
     real_file_names, gen_file_names = {}, {}
     for year in os.listdir(real_path):
@@ -25,9 +27,12 @@ def get_file_names(real_path, gen_path):
                     # Ignore the end of the song (if less than 20s)
                     if file.endswith("20.npy") and file in gen_file_dir:
                         file_name = f"{year}_{song}_{file}"
-                        real_file_names[file_name] = os.path.join(real_path, year, song, file)
-                        gen_file_names[file_name] = os.path.join(gen_path, year, song, file)
+                        real_file_names[file_name] = os.path.join(
+                            real_path, year, song, file)
+                        gen_file_names[file_name] = os.path.join(
+                            gen_path, year, song, file)
     return real_file_names, gen_file_names
+
 
 class DeNoiseDataset(Dataset):
     """
@@ -42,10 +47,12 @@ class DeNoiseDataset(Dataset):
         self.generated = {}
         self.real = {}
 
-        SPECTROGRAM_GENERATED_PATH = os.path.join(data_folder, 'spectrograms_generated')
+        SPECTROGRAM_GENERATED_PATH = os.path.join(
+            data_folder, 'spectrograms_generated')
         SPECTROGRAM_REAL_PATH = os.path.join(data_folder + 'spectrograms_real')
 
-        self.real, self.generated = get_file_names(SPECTROGRAM_REAL_PATH, SPECTROGRAM_GENERATED_PATH)
+        self.real, self.generated = get_file_names(
+            SPECTROGRAM_REAL_PATH, SPECTROGRAM_GENERATED_PATH)
         assert(len(self.real) == len(self.generated))
         assert(len(self.real))
 
@@ -59,20 +66,23 @@ class DeNoiseDataset(Dataset):
         song_name = list(self.real)[idx]
         real_song = self.real[song_name]
         generated_song = self.generated[song_name]
-        sample = {'real': np.load(real_song), 'generated': np.load(generated_song)}
+        sample = {'real': np.load(real_song),
+                  'generated': np.load(generated_song)}
 
         return sample
+
 
 class SpectrogramNotesDataset(Dataset):
     '''
         Dataset that contains the real spectrogram and the note graph
     '''
+
     def __init__(self, data_folder):
         """
         Args:
             data_folder (string): Path to the folder that contains everything.
         """
-        
+
         self.generated = {}
         self.notes = {}
 
@@ -97,9 +107,86 @@ class SpectrogramNotesDataset(Dataset):
 
         return sample
 
+
+class OnsetsFramesVelocity(Dataset):
+    '''
+        Dataset that contains the real spectrogram as input and onsets, frames,
+        velocities as outputs
+    '''
+
+    def __init__(self, data_folder):
+        """
+        Args:
+            data_folder (string): Path to the folder that contains everything.
+        """
+
+        SPECTROGRAM_REAL_PATH = os.path.join(data_folder, 'spectrograms_real')
+        ONSET_PATH = os.path.join(data_folder, 'onsets')
+        FRAME_PATH = os.path.join(data_folder, 'frames')
+        VELOCITY_PATH = os.path.join(data_folder, 'velocities')
+
+        # Get all the names in spectrograms_real
+        self.real, self.onsets, self.frames, self.velocities = {}, {}, {}, {}
+        for year in os.listdir(SPECTROGRAM_REAL_PATH):
+            real_songs = os.listdir(os.path.join(SPECTROGRAM_REAL_PATH, year))
+            onsets = os.listdir(os.path.join(ONSET_PATH, year))
+            frames = os.listdir(os.path.join(FRAME_PATH, year))
+            velocities = os.listdir(os.path.join(VELOCITY_PATH, year))
+
+            for song in real_songs:
+                if song in onsets:
+                    real_file_dir = os.listdir(os.path.join(
+                        SPECTROGRAM_REAL_PATH, year, song))
+                    onsets_file_dir = os.listdir(
+                        os.path.join(ONSET_PATH, year, song))
+                    frames_file_dir = os.listdir(
+                        os.path.join(FRAME_PATH, year, song))
+                    velocities_file_dir = os.listdir(
+                        os.path.join(VELOCITY_PATH, year, song))
+
+                    for file in real_file_dir:
+                        # Ignore the end of the song (if less than 20s)
+                        if file.endswith("20.npy") and file in onsets_file_dir:
+                            file_name = f"{year}_{song}_{file}"
+                            self.real[file_name] = os.path.join(
+                                SPECTROGRAM_REAL_PATH, year, song, file)
+                            self.onsets[file_name] = os.path.join(
+                                ONSET_PATH, year, song, file)
+                            self.frames[file_name] = os.path.join(
+                                FRAME_PATH, year, song, file)
+                            self.velocities[file_name] = os.path.join(
+                                VELOCITY_PATH, year, song, file)
+
+    def __len__(self):
+        return len(self.real)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        song_name = list(self.real)[idx]
+        real_song = self.real[song_name]
+        onsets_song = self.onsets[song_name]
+        frames_song = self.frames[song_name]
+        velocities_song = self.velocities[song_name]
+        sample = {'real': np.load(real_song),
+                  'onsets': np.load(onsets_song),
+                  'frames': np.load(frames_song),
+                  'velocities': np.load(velocities_song)}
+
+        if (sample['onsets'].shape[1] != 1000 or sample['frames'].shape[1] != 1000 or sample['velocities'].shape[1] != 1000):
+            print(song_name)
+            raise Exception("Wrong shape")
+
+        return sample
+
+
 if __name__ == '__main__':
-    dataset = DeNoiseDataset(output_path)
+    dataset = OnsetsFramesVelocity(output_path)
+    print(len(dataset))
     from torch.utils.data import DataLoader
-    data_loader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=24)
+    data_loader = DataLoader(dataset, batch_size=4,
+                             shuffle=True, num_workers=24, drop_last=True)
     for i, sample in enumerate(data_loader):
-        print(i, sample['real'].shape, sample['generated'].shape)
+        print(i, sample['real'].shape, sample['onsets'].shape,
+              sample['frames'].shape, sample['velocities'].shape)
