@@ -141,7 +141,7 @@ if __name__ == '__main__':
     output_path = os.environ.get('dataname')
 
     if not year:
-        for year in YEARS:
+        for year in tqdm(YEARS):
             year = str(year)
             prepare_dirs(input_path, output_path, year)
             with ProcessPoolExecutor(max_workers=24) as executor:
