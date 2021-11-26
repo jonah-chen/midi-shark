@@ -7,8 +7,12 @@ import numpy as np
 import os
 import shutil
 
-def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
-    y, sr = librosa.load(wav_file_path, offset = offset, duration = duration)
+
+def spectogram_librosa(wav_file_path, offset=0, duration=20, show=False):
+    '''
+        Returns a spectrogram of the given wav file as a numpy array
+    '''
+    y, sr = librosa.load(wav_file_path, offset=offset, duration=duration)
     y = librosa.feature.melspectrogram(
         y=y,  # audio time-series
         sr=16000,  # sampling rate of y
@@ -22,13 +26,20 @@ def spectogram_librosa(wav_file_path, offset = 0, duration = 20, show=False):
         plt.show()
     return y
 
-def save_spectrogram(filename, output_folder, max_duration=20, force = False):
-    song_duration = librosa.get_duration(filename = filename)
 
-    folder_name = filename.split("/",-1)[-1][:-4]
-    folder_name = f"../{output_folder}/{folder_name}"
+def save_spectrogram(filename, folder_path, file, max_duration=20, force=False):
+    '''
+        Converts and saves the spectrogram of the given wav file to numerous files
+        inside a specified folder.
+
+        filename - the name of the audio file to convert / save
+        folder_path - the path to the folder where the spectrogram folder is stored
+        file - the name of the audio file
+    '''
+    song_duration = librosa.get_duration(filename=filename)
 
     # Forcibly remove folder and contents if it exists
+    folder_name = f"{folder_path}/{file[:-4]}"
     if force and os.path.isdir(folder_name):
         shutil.rmtree(folder_name)
     if not os.path.isdir(folder_name):
@@ -36,13 +47,18 @@ def save_spectrogram(filename, output_folder, max_duration=20, force = False):
 
     for t in np.arange(0, song_duration, max_duration):
         duration = min(max_duration, np.floor(song_duration - t))
-        spectrogram = spectogram_librosa(filename, t, duration, False)
-        
-        # Clean up file name string
-        name = f"{folder_name}/offset_{t}_duration_{duration}"
-        
-        # Save spectrogram to data folder
-        np.save(name, spectrogram)
+
+        # There is really no point to process something with too short duration
+        # it also errors out librosa
+        if duration > 0.2:
+            spectrogram = spectogram_librosa(filename, t, duration, False)
+
+            # Clean up file name string
+            name = f"{folder_name}/offset_{t}_duration_{duration}"
+
+            # Save spectrogram to data folder
+            np.save(name, spectrogram)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

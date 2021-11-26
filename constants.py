@@ -1,2 +1,0 @@
-_ROOT = "~/"
-_DATASETS = {}
