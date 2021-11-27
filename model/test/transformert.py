@@ -2,9 +2,69 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from transformer import PositionalEmbedding
 import copy
 import math
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+class PositionalEmbedding(nn.Module):
+    """
+    A layer for positionally encoding tensors using the procedure
+    described in section 3.5 of "Attention Is All You Need".
+    """
+
+    # A hashtable can be used to save the calculated sin/cos to avoid recomputation
+    hashtable = dict()
+
+    use_hashtable = False  # select whether to use a hashtable
+    # defaults to False because it can consume a lot of memory
+
+    @staticmethod
+    def reset(val=dict()):
+        PositionalEmbedding.hashtable = val
+
+    def forward(self, x, start_pos=0):
+        """ 
+        The pytorch neural network forward function.
+
+        Inputs:
+            x: Input batch of sequences of tokens, each token is a vector. i.e. rank3 tensor
+            [x.shape = (batch_sz, tokens, dims per token)]
+
+        Outputs:
+            Tensor y with the same shape as x, such that `y = x + PE` where
+                `PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))`
+                `PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))`
+                meaning:
+                    pos: position of the token
+                    i:   the i-th element of the vector of the token at position pos
+        Notes to self:
+            Sin and Cos are expensive, power is expensive. 
+            Adds/Multiplies are cheap. Division is bad. 
+            Vectorize everything. Loops == BAD.
+            Use log 10000.
+        """
+        batch_size, n_tokens, d_model = x.shape  # get input parameters
+
+        if x.shape in PositionalEmbedding.hashtable:  # reuse the embeddings that are already generated
+            return x + PositionalEmbedding.hashtable[(n_tokens, d_model)].repeat(batch_size, 1, 1)
+
+        # half the dimension of model because there is both sine and cosine
+        num_trigs = (d_model+1)//2
+        # also account for odd and even cases
+
+        _y = -math.log(10000) / d_model  # log table magic
+
+        # Manual outer product is faster & require less intermediate variables than `torch.outer`
+        _y = torch.exp(2*torch.arange(num_trigs, device=DEVICE)*_y).unsqueeze(0)
+        _y = torch.arange(n_tokens, device=DEVICE).unsqueeze(1) * _y
+
+        y = torch.empty((n_tokens, d_model), device=DEVICE)
+        y[:, 0::2] = torch.sin(_y)
+        y[:, 1::2] = torch.cos(_y[:, :num_trigs-(d_model % 2)])
+
+        if PositionalEmbedding.use_hashtable:
+            PositionalEmbedding.hashtable[(n_tokens, d_model)] = y
+        return x + y.repeat(batch_size, 1, 1).to(DEVICE)
 
 class FeedForward(nn.Module):
     def __init__(self, dim_model = 512, dim_ff=2048):
