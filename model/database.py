@@ -181,21 +181,12 @@ class OnsetsFramesVelocity(Dataset):
         onsets_song = self.onsets[song_name]
         offsets_song = self.offsets[song_name]
         frames_song = self.frames[song_name]
-        velocities_song = self.velocities[song_name]
-        sample = {'real': np.load(real_song),
-                  'onsets': np.load(onsets_song),
-                  'offsets': np.load(offsets_song),
-                  'frames': np.load(frames_song),
-                  'velocities': np.load(velocities_song)}
-
-        if (sample['onsets'].shape[1] != 1000 or
-            sample['offsets'].shape[1] != 1000 or
-            sample['frames'].shape[1] != 1000 or
-                sample['velocities'].shape[1] != 1000):
-            print(song_name)
-            raise Exception("Wrong shape")
-
-        return sample
+        velocities_song = self.velocities[song_name] 
+        return {'real'      : np.load(real_song),
+                'onsets'    : np.load(onsets_song).astype(np.float32),
+                'offsets'   : np.load(offsets_song).astype(np.float32),
+                'frames'    : np.load(frames_song).astype(np.float32),
+                'velocities': np.load(velocities_song)}
 
 
 if __name__ == '__main__':
