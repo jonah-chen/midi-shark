@@ -19,50 +19,6 @@ from torch.nn import BCEWithLogitsLoss
 from database import OnsetsFramesVelocity, output_path
 from transformer import Transformer
 
-class OnsetsBaseline(Module):
-    def __init__(self):
-        super(OnsetsBaseline, self).__init__()
-        self.cnn = Sequential(
-            Conv2d(1, 32, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(32),
-            ReLU(),
-            Conv2d(32, 32, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(32),
-            ReLU(),
-            MaxPool2d(kernel_size=(1,2)),
-            Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(64),
-            ReLU(),
-            Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(64),
-            ReLU(),
-            MaxPool2d(kernel_size=(1,2)),
-            Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(128),
-            ReLU(),
-            Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
-            BatchNorm2d(128),
-            ReLU()
-        )
-
-        self.fc = Linear(7296, 256)
-
-        self.rnn = LSTM(256, 128, batch_first=True, bidirectional=True)
-
-        self.out = Linear(256, 88)
-        
-
-    
-    def forward(self, x):
-        x = x.unsqueeze(1)
-        x = self.cnn(x)
-        x = x.transpose(1,2).flatten(-2)
-        x = self.fc(x)
-        x = self.rnn(x)[0]
-        x = self.out(x)
-        return x.transpose(1,2)
-
-
 import torch
 import torch.nn.functional as F
 from torch import nn
