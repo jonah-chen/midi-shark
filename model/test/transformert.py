@@ -26,7 +26,7 @@ class Residualdropout(nn.Module):
 
     def forward(self, *tensors: Tensor) -> Tensor:
         x = self.sublayer(*tensors)
-        return self.norm(tensors[-1] + self.dropout(x[0]))
+        return self.norm(tensors[0] + self.dropout(x[0]))
 
 class EncoderLayer(nn.Module):
     def __init__(
@@ -39,7 +39,7 @@ class EncoderLayer(nn.Module):
         super().__init__()
         multihead = torch.nn.MultiheadAttention
         self.attention = Residualdropout(
-            multihead(dim_model, num_heads, dropout, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
@@ -73,11 +73,8 @@ class Encoder(nn.Module):
 
     def forward(self, x: Tensor, num_layers) -> Tensor:
         #x = self.embedding(x)
-        
         x = self.pe(x)
         for i in range(num_layers):
-            print("encoder")
-            print(x.shape)
             x = self.layers[i](x)
         return x
 
@@ -92,12 +89,12 @@ class DecoderLayer(nn.Module):
         super().__init__()
         multihead = torch.nn.MultiheadAttention
         self.attention1 = Residualdropout(
-            multihead(dim_model, num_heads, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
         self.attention2 = Residualdropout(
-            multihead(dim_model, num_heads, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
@@ -108,7 +105,6 @@ class DecoderLayer(nn.Module):
         )
 
     def forward(self, tgt: Tensor, memory: Tensor) -> Tensor:
-        
         tgt = self.attention1(tgt, tgt, tgt)
         tgt = self.attention2(tgt, memory, memory)
         return self.feed_forward(tgt)
@@ -175,6 +171,8 @@ class Transformer(nn.Module):
         )
         self.src_tok_emb = TokenEmbedding(src_vocab_size, emb_size)
         self.tgt_tok_emb = TokenEmbedding(tgt_vocab_size, emb_size)
+        self.generator = nn.Linear(emb_size, tgt_vocab_size)
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
-        return self.decoder(self.tgt_tok_emb(tgt), self.encoder(self.src_tok_emb(src),3),3)
+        out = self.decoder(self.tgt_tok_emb(tgt), self.encoder(self.src_tok_emb(src),3),3)
+        return self.generator(out)
