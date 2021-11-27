@@ -110,8 +110,8 @@ class SpectrogramNotesDataset(Dataset):
 
 class OnsetsFramesVelocity(Dataset):
     '''
-        Dataset that contains the real spectrogram as input and onsets, frames,
-        velocities as outputs
+    Dataset that contains the real spectrogram (-1,229,862,) as input;
+    and onsets, offsets, frames, and velocities (-1,88,1000,) as outputs
     '''
 
     def __init__(self, data_folder):
@@ -122,14 +122,16 @@ class OnsetsFramesVelocity(Dataset):
 
         SPECTROGRAM_REAL_PATH = os.path.join(data_folder, 'spectrograms_real')
         ONSET_PATH = os.path.join(data_folder, 'onsets')
+        OFFSET_PATH = os.path.join(data_folder, 'offsets')
         FRAME_PATH = os.path.join(data_folder, 'frames')
         VELOCITY_PATH = os.path.join(data_folder, 'velocities')
 
         # Get all the names in spectrograms_real
-        self.real, self.onsets, self.frames, self.velocities = {}, {}, {}, {}
+        self.real, self.onsets, self.offsets, self.frames, self.velocities = {}, {}, {}, {}, {}
         for year in os.listdir(SPECTROGRAM_REAL_PATH):
             real_songs = os.listdir(os.path.join(SPECTROGRAM_REAL_PATH, year))
             onsets = os.listdir(os.path.join(ONSET_PATH, year))
+            offsets = os.listdir(os.path.join(OFFSET_PATH, year))
             frames = os.listdir(os.path.join(FRAME_PATH, year))
             velocities = os.listdir(os.path.join(VELOCITY_PATH, year))
 
@@ -139,6 +141,8 @@ class OnsetsFramesVelocity(Dataset):
                         SPECTROGRAM_REAL_PATH, year, song))
                     onsets_file_dir = os.listdir(
                         os.path.join(ONSET_PATH, year, song))
+                    offsets_file_dir = os.listdir(
+                        os.path.join(OFFSET_PATH, year, song))
                     frames_file_dir = os.listdir(
                         os.path.join(FRAME_PATH, year, song))
                     velocities_file_dir = os.listdir(
@@ -152,10 +156,18 @@ class OnsetsFramesVelocity(Dataset):
                                 SPECTROGRAM_REAL_PATH, year, song, file)
                             self.onsets[file_name] = os.path.join(
                                 ONSET_PATH, year, song, file)
+                            self.offsets[file_name] = os.path.join(
+                                OFFSET_PATH, year, song, file)
                             self.frames[file_name] = os.path.join(
                                 FRAME_PATH, year, song, file)
                             self.velocities[file_name] = os.path.join(
                                 VELOCITY_PATH, year, song, file)
+
+        assert(len(self.real))
+        assert(len(self.real) == len(self.onsets) == len(self.offsets)
+               == len(self.frames) == len(self.velocities))
+
+        self.real_list = list(self.real)
 
     def __len__(self):
         return len(self.real)
@@ -164,17 +176,22 @@ class OnsetsFramesVelocity(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        song_name = list(self.real)[idx]
+        song_name = self.real_list[idx]
         real_song = self.real[song_name]
         onsets_song = self.onsets[song_name]
+        offsets_song = self.offsets[song_name]
         frames_song = self.frames[song_name]
         velocities_song = self.velocities[song_name]
         sample = {'real': np.load(real_song),
                   'onsets': np.load(onsets_song),
+                  'offsets': np.load(offsets_song),
                   'frames': np.load(frames_song),
                   'velocities': np.load(velocities_song)}
 
-        if (sample['onsets'].shape[1] != 1000 or sample['frames'].shape[1] != 1000 or sample['velocities'].shape[1] != 1000):
+        if (sample['onsets'].shape[1] != 1000 or
+            sample['offsets'].shape[1] != 1000 or
+            sample['frames'].shape[1] != 1000 or
+                sample['velocities'].shape[1] != 1000):
             print(song_name)
             raise Exception("Wrong shape")
 
@@ -188,5 +205,5 @@ if __name__ == '__main__':
     data_loader = DataLoader(dataset, batch_size=4,
                              shuffle=True, num_workers=24, drop_last=True)
     for i, sample in enumerate(data_loader):
-        print(i, sample['real'].shape, sample['onsets'].shape,
+        print(i, sample['real'].shape, sample['onsets'].shape, sample['offsets'].shape,
               sample['frames'].shape, sample['velocities'].shape)
