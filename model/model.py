@@ -34,13 +34,15 @@ class ConvStack(nn.Module):
             nn.BatchNorm2d(output_features // 16),
             nn.ReLU(),
             # layer 1
-            nn.Conv2d(output_features // 16, output_features // 16, (3, 3), padding=1),
+            nn.Conv2d(output_features // 16, output_features //
+                      16, (3, 3), padding=1),
             nn.BatchNorm2d(output_features // 16),
             nn.ReLU(),
             # layer 2
             nn.MaxPool2d((1, 2)),
             nn.Dropout(0.25),
-            nn.Conv2d(output_features // 16, output_features // 8, (3, 3), padding=1),
+            nn.Conv2d(output_features // 16,
+                      output_features // 8, (3, 3), padding=1),
             nn.BatchNorm2d(output_features // 8),
             nn.ReLU(),
             # layer 3
@@ -48,7 +50,8 @@ class ConvStack(nn.Module):
             nn.Dropout(0.25),
         )
         self.fc = nn.Sequential(
-            nn.Linear((output_features // 8) * (input_features // 4), output_features),
+            nn.Linear((output_features // 8) *
+                      (input_features // 4), output_features),
             nn.Dropout(0.5)
         )
 
@@ -65,7 +68,8 @@ class OnsetsBaseline(nn.Module):
         model_size = model_complexity * 16
 
         self.conv = ConvStack(input_features, model_size)
-        self.rnn = LSTM(model_size, model_size//2, batch_first=True, bidirectional=True)
+        self.rnn = LSTM(model_size, model_size//2,
+                        batch_first=True, bidirectional=True)
         self.fc = Linear(model_size, output_features)
 
     def forward(self, x, y):
@@ -75,18 +79,18 @@ class OnsetsBaseline(nn.Module):
         x = self.fc(x)
         return x
 
+
 class TOnly(nn.Module):
     def __init__(self, input_features, output_features):
         super().__init__()
 
+
 if __name__ == '__main__':
-    dataset = OnsetsFramesVelocity(output_path)    
-    model = OnsetsBaseline(229,88)
+    dataset = OnsetsFramesVelocity(output_path)
+    val_dataset = OnsetsFramesVelocity(output_path, split='val')
+    model = OnsetsBaseline(229, 88)
     model.cuda()
     # print number of parameters
-    print(sum(p.numel() for p in model.parameters() if p.requires_grad), 'parameters')
 
-    dataset.train(model, split='frames', epochs=12, batch_size=8, lr=6e-4)
-    
-    # save the model
-    torch.save(model.state_dict(), 'frames_baseline.pt')
+    dataset.train_split(model, split='frames', epochs=12, batch_size=8,
+                        lr=6e-4, validation_data=val_dataset, save_path='frames_baseline.pt')

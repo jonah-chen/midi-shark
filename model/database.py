@@ -205,7 +205,7 @@ class OnsetsFramesVelocity(Dataset):
                 'frames': np.load(frames_song).astype(np.float32),
                 'velocities': np.load(velocities_song)}
 
-    def train(
+    def train_split(
         self,
         model,
         split='onsets',
@@ -299,7 +299,7 @@ class OnsetsFramesVelocity(Dataset):
 
             # perform validation if validation data is not None
             if validation_data:
-                result = validation_data.val(
+                result = validation_data.val_split(
                     model,
                     split=split,
                     batch_size=batch_size,
@@ -318,7 +318,7 @@ class OnsetsFramesVelocity(Dataset):
             if save_path:
                 torch.save(model.state_dict(), save_path)
 
-    def val(
+    def val_split(
         self,
         model,
         split='onsets',
