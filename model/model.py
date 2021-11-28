@@ -84,37 +84,9 @@ if __name__ == '__main__':
     model = OnsetsBaseline(229,88)
     model.cuda()
     # print number of parameters
-    print(sum(p.numel() for p in model.parameters() if p.requires_grad))
+    print(sum(p.numel() for p in model.parameters() if p.requires_grad), 'parameters')
 
-    dataset.train(model, split='frames', epochs=500, batch_size=8, lr=1e-2)
-
-    # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-    # criterion = BCEWithLogitsLoss()
+    dataset.train(model, split='frames', epochs=12, batch_size=8, lr=6e-4)
     
-    # for i, batch in enumerate(loader):
-    #     spec, onsets = batch['real'].cuda(), batch['onsets'].cuda()
-    #     spec = spec.transpose(1,2)
-    #     onsets = onsets.transpose(1,2)
-    #     break
-    
-    # losses = np.empty(5000)
-    # maxes = np.empty(5000)
-    # for epoch in range(5000):
-    #     out = model(spec)
-    #     loss = criterion(out, onsets)
-    #     optimizer.zero_grad()
-    #     loss.backward()
-    #     optimizer.step()
-    #     losses[epoch] = loss.item()
-    #     maxes[epoch] = torch.max(out).item()
-    #     if epoch % 100 == 0:
-    #         print(np.mean(losses[max(0, epoch-100):epoch]))
-    # # create the two axes on left and right side
-    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-    # # plot the loss
-    # ax1.plot(losses)
-    # ax1.set_title('Loss')
-    # # plot the maxes
-    # ax2.plot(maxes)
-    
-    
+    # save the model
+    torch.save(model.state_dict(), 'frames_baseline.pt')
