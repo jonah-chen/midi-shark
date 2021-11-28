@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
 
-def divide_notes(notes, folder_name, name, hop_length=20):
+def divide_notes(notes, folder_name, name, hop_length=20*1000/862):
     '''
     Divide notes into multiple 20s intervals.
 
@@ -26,7 +26,7 @@ def divide_notes(notes, folder_name, name, hop_length=20):
         np.save(output_name, notes_spectrogram_final)
 
 
-def save_onsets(notes, output_folder, hop_length=20):
+def save_onsets(notes, output_folder, hop_length=20*1000/862):
     """
     Generate the onset vectors
 
@@ -43,13 +43,13 @@ def save_onsets(notes, output_folder, hop_length=20):
     length = int(np.ceil(np.max(notes[:, 2])/hop_length))
     onsets = np.zeros((88, length), dtype=np.uint8)
     for note in notes:
-        index = int(note[1])//hop_length
+        index = int(note[1]/hop_length)
         onsets[int(note[0])-21, index] = 1
 
     divide_notes(onsets, output_folder, hop_length)
 
 
-def save_offsets(notes, output_folder, hop_length=20):
+def save_offsets(notes, output_folder, hop_length=20*1000/862):
     '''Generate the offset vectors
 
     Args:
@@ -62,13 +62,13 @@ def save_offsets(notes, output_folder, hop_length=20):
     length = int(np.ceil(np.max(notes[:, 2])/hop_length))
     offsets = np.zeros((88, length), dtype=np.uint8)
     for note in notes:
-        index = int(note[2])//hop_length
+        index = int(note[2]/hop_length)
         offsets[int(note[0])-21, index] = 1
 
     divide_notes(offsets, output_folder, hop_length)
 
 
-def save_velocities(notes, output_folder, hop_length=20):
+def save_velocities(notes, output_folder, hop_length=20*1000/862):
     """
     Generate the velocity vectors and saves them to the output folder.
 
@@ -82,13 +82,13 @@ def save_velocities(notes, output_folder, hop_length=20):
     length = int(np.ceil(np.max(notes[:, 2])/hop_length))
     velocities = np.zeros((88, length), dtype=np.float32)
     for note in notes:
-        index = int(note[1])//hop_length
+        index = int(note[1]/hop_length)
         velocities[int(note[0])-21, index] = note[3]/127
 
     divide_notes(velocities, output_folder, hop_length)
 
 
-def save_frames(notes, output_folder, hop_length=20):
+def save_frames(notes, output_folder, hop_length=20*1000/862):
     '''Generate the frame vectors
 
     Args:
@@ -104,8 +104,8 @@ def save_frames(notes, output_folder, hop_length=20):
     # Set a 1 in notes_spectrogram for each note between start and end time
     for i in notes:
         # get start and end time
-        start = int(i[1])//hop_length
-        end = int(i[2])//hop_length
+        start = int(i[1]/hop_length)
+        end = int(i[2]/hop_length)
         # get note
         note = int(i[0])-21
 
@@ -138,10 +138,10 @@ if __name__ == '__main__':
             filename = filename[:-4]
             with ThreadPoolExecutor() as executor:
                 executor.submit(save_onsets, notes, os.path.join(
-                    data_root, "onsets", year, filename))
+                    data_root, "onsets", year, filename)).result()
                 executor.submit(save_offsets, notes, os.path.join(
-                    data_root, "offsets", year, filename))
+                    data_root, "offsets", year, filename)).result()
                 executor.submit(save_velocities, notes, os.path.join(
-                    data_root, "velocities", year, filename))
+                    data_root, "velocities", year, filename)).result()
                 executor.submit(save_frames, notes, os.path.join(
-                    data_root, "frames", year, filename))
+                    data_root, "frames", year, filename)).result()
