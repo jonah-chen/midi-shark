@@ -17,7 +17,6 @@ from torch.nn import ReLU, Sigmoid
 from torch.nn import BCEWithLogitsLoss
 
 from database import OnsetsFramesVelocity, output_path
-from transformer import Transformer
 
 import torch.nn.functional as F
 from torch import nn
@@ -92,5 +91,5 @@ if __name__ == '__main__':
     model.cuda()
     # print number of parameters
 
-    dataset.train_split(model, split='frames', epochs=12, batch_size=8,
-                        lr=6e-4, validation_data=val_dataset, save_path='frames_baseline.pt')
+    dataset.train_split(model, split='onsets', epochs=12, batch_size=8,
+                        lr=6e-4, validation_data=val_dataset, save_path='onsets_baseline.pt')
