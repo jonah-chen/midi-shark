@@ -19,6 +19,10 @@ from torch.nn import BCEWithLogitsLoss
 from database import OnsetsFramesVelocity, output_path
 from transformer import Transformer
 
+<<<<<<< HEAD
+=======
+import torch
+>>>>>>> 77a930e2a926ced798fca648dcb7653211924f2d
 import torch.nn.functional as F
 from torch import nn
 
