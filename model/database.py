@@ -1,7 +1,11 @@
 import torch
 import os
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
+from torch.nn import BCEWithLogitsLoss
+from torch.optim import Adam
 import numpy as np
+from tqdm import tqdm
+from metrics import *
 
 # Access environmental variables
 from dotenv import load_dotenv
@@ -114,10 +118,11 @@ class OnsetsFramesVelocity(Dataset):
     and onsets, offsets, frames, and velocities (-1,88,1000,) as outputs
     '''
 
-    def __init__(self, data_folder):
+    def __init__(self, data_folder, samples=None):
         """
         Args:
             data_folder (string): Path to the folder that contains everything.
+            samples (int): Number of samples to load. Defaults to None meaning all samples.
         """
 
         SPECTROGRAM_REAL_PATH = os.path.join(data_folder, 'spectrograms_real')
@@ -168,9 +173,10 @@ class OnsetsFramesVelocity(Dataset):
                == len(self.frames) == len(self.velocities))
 
         self.real_list = list(self.real)
+        self.length = samples if samples else len(self.real)
 
     def __len__(self):
-        return len(self.real)
+        return self.length
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
@@ -188,11 +194,71 @@ class OnsetsFramesVelocity(Dataset):
                 'frames'    : np.load(frames_song).astype(np.float32),
                 'velocities': np.load(velocities_song)}
 
+    def train(
+        self,
+        model,
+        split='onsets',
+        batch_size=4,
+        samples=None,
+        shuffle=True,
+        num_workers=24,
+        epochs=1,
+        verbose=True,
+        device='cuda',
+        loss_fn=BCEWithLogitsLoss,
+        optimizer=Adam,
+        lr=0.0006
+    ):
+        data_loader = DataLoader(self, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        criterion = loss_fn()
+        optim = optimizer(model.parameters(), lr=lr)
+
+        for epoch in range(epochs):
+            epoch_loss, epoch_P, epoch_R, epoch_F1, epoch_min, epoch_max = 0, 0, 0, 0, 0, 0
+
+            # start training model
+            model.train()
+            data_iter = tqdm(enumerate(data_loader), ascii=True, total=len(data_loader)) if verbose else enumerate(data_loader)
+            for i, batch in data_iter:
+                # get data
+                spec = batch['real'].to(device) 
+                truth = batch[split].to(device)
+                
+                spec = spec.transpose(1,2)
+                truth = truth.transpose(1,2)
+
+                # forward pass
+                out = model(spec, truth)
+                loss = criterion(out, truth)
+
+                # backward pass
+                optim.zero_grad()
+                loss.backward()
+                optim.step()
+
+                if verbose:
+                    # calculate precision, recall and f1 score
+                    pred = out > 0
+                    with torch.no_grad():
+                        P = precision(truth>0, pred).item()
+                        R = recall(truth>0, pred).item()
+                        F1 = 2 * P * R / (P + R + 1e-8)
+                        min_ = torch.min(out).item()
+                        max_ = torch.max(out).item()
+
+                    # update loss, precision, recall, f1 score and min/max
+                    epoch_loss += loss.item()
+                    epoch_P += P
+                    epoch_R += R
+                    epoch_F1 += F1
+                    epoch_min += min_
+                    epoch_max += max_
+
+                    data_iter.set_description(f'Epoch {epoch + 1}/{epochs} - Loss: {epoch_loss/(i+1):.4f} - P: {100*epoch_P/(i+1):.2f}% - R: {100*epoch_R/(i+1):.2f}% - F1: {100*epoch_F1/(i+1):.2f}% - [{epoch_min/(i+1):.4f},{epoch_max/(i+1):.4f}]')
 
 if __name__ == '__main__':
     dataset = OnsetsFramesVelocity(output_path)
     print(len(dataset))
-    from torch.utils.data import DataLoader
     data_loader = DataLoader(dataset, batch_size=4,
                              shuffle=True, num_workers=24, drop_last=True)
     for i, sample in enumerate(data_loader):
