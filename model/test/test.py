@@ -78,7 +78,7 @@ transformer = transformer.to(DEVICE)
 
 loss_fn = torch.nn.CrossEntropyLoss(ignore_index=PAD_IDX)
 
-optimizer = torch.optim.Adam(transformer.parameters(), lr=0.0001, betas=(0.9, 0.98), eps=1e-9)
+optimizer = torch.optim.Adam(transformer.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9)
 
 from torch.nn.utils.rnn import pad_sequence
 
@@ -116,6 +116,7 @@ def collate_fn(batch):
     return src_batch, tgt_batch
 
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 def train_epoch(model, optimizer):
     model.train()
@@ -165,7 +166,9 @@ def evaluate(model):
 #Training
 
 from timeit import default_timer as timer
-NUM_EPOCHS = 18
+NUM_EPOCHS = 100
+# print the number of parameters in the transformer
+print(sum(p.numel() for p in transformer.parameters()))
 
 for epoch in range(1, NUM_EPOCHS+1):
     start_time = timer()

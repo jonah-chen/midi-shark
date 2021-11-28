@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from transformer import PositionalEmbedding
 import copy
+import math
 
 class FeedForward(nn.Module):
     def __init__(self, dim_model = 512, dim_ff=2048):
@@ -25,7 +26,7 @@ class Residualdropout(nn.Module):
 
     def forward(self, *tensors: Tensor) -> Tensor:
         x = self.sublayer(*tensors)
-        return self.norm(tensors[-1] + self.dropout(x[0]))
+        return self.norm(tensors[0] + self.dropout(x[0]))
 
 class EncoderLayer(nn.Module):
     def __init__(
@@ -38,7 +39,7 @@ class EncoderLayer(nn.Module):
         super().__init__()
         multihead = torch.nn.MultiheadAttention
         self.attention = Residualdropout(
-            multihead(dim_model, num_heads, dropout, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
@@ -81,19 +82,19 @@ class DecoderLayer(nn.Module):
     def __init__(
         self, 
         dim_model = 512, 
-        num_heads = 6, 
+        num_heads = 8, 
         dim_ff = 2048, 
         dropout = 0.1, 
     ):
         super().__init__()
         multihead = torch.nn.MultiheadAttention
         self.attention1 = Residualdropout(
-            multihead(dim_model, num_heads, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
         self.attention2 = Residualdropout(
-            multihead(dim_model, num_heads, batch_first=True),
+            multihead(dim_model, num_heads),
             dimension=dim_model,
             dropout=dropout,
         )
@@ -126,7 +127,7 @@ class Decoder(nn.Module):
         tgt = self.pe(tgt)
         for i in range(num_layers):
             tgt = self.layers[i](tgt,memory)
-        return torch.softmax(self.linear(tgt), dim =1)
+        return torch.softmax(self.linear(tgt), dim =-1)
 
 class Transformer(nn.Module):
     def __init__(
@@ -135,7 +136,7 @@ class Transformer(nn.Module):
         num_decoder_layers = 6,
         dim_model = 512, 
         num_heads = 8, 
-        dim_ff = 2048, 
+        dim_ff = 512, 
         dropout: float = 0.1, 
         activation: nn.Module = nn.ReLU(),
     ):
@@ -157,11 +158,4 @@ class Transformer(nn.Module):
         )
 
     def forward(self, src: Tensor, tgt: Tensor) -> Tensor:
-        return self.decoder(tgt, self.encoder(src,6),6)
-
-src = torch.rand(64, 16, 512)
-tgt = torch.rand(64, 16, 512)
-res = Transformer()(src, tgt)
-print('input shape: ' + str(src.shape))
-print('output shape: ' + str(res.shape))
-print('same size: '+ str(res.shape==src.shape))
+        return self.decoder(tgt, self.encoder(src,3),3)
