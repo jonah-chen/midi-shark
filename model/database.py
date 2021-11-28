@@ -267,8 +267,10 @@ class OnsetsFramesVelocity(Dataset):
                 spec = spec.transpose(1, 2)
                 truth = truth.transpose(1, 2)
 
+                spec = (spec + 40)/40
+
                 # forward pass
-                out = model(spec, truth)
+                out = model(spec)
                 loss = criterion(out, truth)
 
                 # backward pass
@@ -359,8 +361,10 @@ class OnsetsFramesVelocity(Dataset):
                 spec = spec.transpose(1, 2)
                 truth = truth.transpose(1, 2)
 
+                spec = (spec + 40)/40
+
                 # forward pass
-                out = model(spec, truth)
+                out = model(spec)
                 pred = out > 0
                 truth = truth > 0
                 # calculate precision, recall
@@ -378,6 +382,36 @@ class OnsetsFramesVelocity(Dataset):
                 'F1': 100*F1/len(data_loader),
                 'min': min_/len(data_loader),
                 'max': max_/len(data_loader)}
+    
+    def example(model, idx=None, split='onsets', device='cuda'):
+        model.eval()
+
+        sample = self.__getitem__(idx)
+        spec = sample['real'].to(device)
+        truth = sample[split].to(device)
+
+        spec = spec.transpose(1, 2)
+        truth = truth.transpose(1, 2)
+
+        spec = (spec + 40)/40
+
+        out = model(spec.unsqueeze(0))
+        pred = out[0] > 0
+        truth = truth > 0
+
+        P = precision(truth, pred)
+        R = recall(truth, pred)
+
+        return {
+            'real': spec.cpu.numpy(),
+            'pred': pred.cpu.numpy(),
+            'truth': truth.cpu.numpy(),
+            'P': P,
+            'R': R,
+            'F1': 2 * P * R / (P + R + 1e-8),
+            'min': torch.min(out).item(),
+            'max': torch.max(out).item()
+        }
 
 
 if __name__ == '__main__':

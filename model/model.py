@@ -45,13 +45,13 @@ class ConvStack(nn.Module):
             nn.BatchNorm2d(output_features // 8),
             nn.ReLU(),
             # layer 3
-            nn.MaxPool2d((1, 2)),
-            nn.Dropout(0.25),
+            nn.MaxPool2d((1, 2))
         )
         self.fc = nn.Sequential(
             nn.Linear((output_features // 8) *
                       (input_features // 4), output_features),
-            nn.Dropout(0.5)
+            nn.BatchNorm1d(862),
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -71,7 +71,7 @@ class OnsetsBaseline(nn.Module):
                         batch_first=True, bidirectional=True)
         self.fc = Linear(model_size, output_features)
 
-    def forward(self, x, y):
+    def forward(self, x):
         x = self.conv(x)
         x = self.rnn(x)[0]
         x = nn.ReLU()(x)
@@ -91,5 +91,12 @@ if __name__ == '__main__':
     model.cuda()
     # print number of parameters
 
-    dataset.train_split(model, split='onsets', epochs=12, batch_size=8,
-                        lr=6e-4, validation_data=val_dataset, save_path='onsets_baseline.pt')
+    dataset.train_split(model, split='frames', epochs=12, batch_size=15,
+                        lr=1e-3, validation_data=val_dataset, save_path='frames_baseline.pt')
+    
+    model = OnsetsBaseline(229, 88)
+    model.cuda()
+    # print number of parameters
+
+    dataset.train_split(model, split='offsets', epochs=12, batch_size=15,
+                        lr=1e-3, validation_data=val_dataset, save_path='offsets_baseline.pt')
