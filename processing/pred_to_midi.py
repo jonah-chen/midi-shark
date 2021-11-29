@@ -29,7 +29,7 @@ def create_frames_velocity_dict(frames, velocities = None):
 
                 # Set Velocity
                 if type(velocities) == type(None):
-                    velocity_dict[(i+21, j)] = 50
+                    velocity_dict[(i+21, j)] = 50/127
                 else:
                     velocity_dict[(i+21, j)] = velocities[i][j]
                 j_last = j # Reset the onset time
@@ -45,8 +45,6 @@ def write_to_midi(output_file, note_dict, velocity_dict):
         them to a midi file.
 
         The midi file is saved to the output_file.
-
-        If velocity_dict is None, then the velocity is set to 50.
     '''
 
     mf = MIDIFile(1) # only 1 track
@@ -69,7 +67,8 @@ def write_to_midi(output_file, note_dict, velocity_dict):
         time = np.ceil(onset_list[i][1]*f*16)/16 # Round up to the nearest 16th note
         duration = np.ceil(note_dict[onset_list[i]]*f*16)/16 # Round up to the nearest 16th note
 
-        velocity = int(list(velocity_dict.values())[i]*127) if velocity_dict != None else 50
+
+        velocity = int(list(velocity_dict.values())[i]*127)
 
         mf.addNote(track, channel, note, time, duration, velocity)
 
@@ -82,24 +81,27 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
         to a single numpy file
     '''
     frame_list = os.listdir(frame_input_folder)
-    velocity_list = os.listdir(velocity_input_folder)
 
     frames = None
     velocities = None
 
     for f in frame_list:
         frame_single = np.load(os.path.join(frame_input_folder, f))
-        vel_single = np.load(os.path.join(velocity_input_folder, f))
+        
+        if velocity_input_folder != "None":
+            vel_single = np.load(os.path.join(velocity_input_folder, f))
 
         # Initialize at the first frame
         if frames is None:
             frames = frame_single
-            velocities = vel_single
+            if velocity_input_folder != "None":
+                velocities = vel_single
 
         # Concatenate the frames
         else:
             frames = np.concatenate((frames, frame_single), axis=1)
-            velocities = np.concatenate((velocities, vel_single), axis=1)
+            if velocity_input_folder != "None":
+                velocities = np.concatenate((velocities, vel_single), axis=1)
     
     return frames, velocities
 
@@ -111,6 +113,7 @@ def folder_to_midi(frame_input_folder, velocity_input_folder, output_file):
     frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
     note_dict, velocity_dict = create_frames_velocity_dict(frames, velocities)
     write_to_midi(output_file, note_dict, velocity_dict)
+    
 
 if __name__ == '__main__':
     '''
