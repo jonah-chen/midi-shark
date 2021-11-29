@@ -88,19 +88,19 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
     for f in frame_list:
         frame_single = np.load(os.path.join(frame_input_folder, f))
         
-        if velocity_input_folder != "None":
+        if type(velocity_input_folder) != type(None):
             vel_single = np.load(os.path.join(velocity_input_folder, f))
 
         # Initialize at the first frame
         if frames is None:
             frames = frame_single
-            if velocity_input_folder != "None":
+            if type(velocity_input_folder) != type(None):
                 velocities = vel_single
 
         # Concatenate the frames
         else:
             frames = np.concatenate((frames, frame_single), axis=1)
-            if velocity_input_folder != "None":
+            if type(velocity_input_folder) != type(None):
                 velocities = np.concatenate((velocities, vel_single), axis=1)
     
     return frames, velocities
@@ -130,5 +130,6 @@ if __name__ == '__main__':
     parser.add_argument('--o', help='output midi file name', type=str)
 
     args = parser.parse_args()
-
+    if args.v == 'None':
+        args.v = None
     folder_to_midi(args.f, args.v, args.o)
