@@ -28,3 +28,16 @@ def f1_score(y_true, y_pred):
     precision = precision(y_true, y_pred)
     recall = recall(y_true, y_pred)
     return 2 * ((precision * recall) / (precision + recall + 1e-7)).item()
+
+class modified_mse:
+    def __call__(self, y_true, y_pred, onsets_true):
+        """Modified mean squared error.
+        Only computes a batch-wise average of mse.
+        Computes the mean squared error between the labels and predictions.
+        """
+        total_onsets = onsets_true.sum()
+        return (onsets_true*(y_true-y_pred)**2).sum() / total_onsets if total_onsets else 0
+
+def err(y_true, y_pred, onsets_true, max_err=0.01):
+    total_onsets = onsets_true.sum()
+    return (onsets_true* ( (y_true-y_pred)**2 < max_err ) ).sum() / total_onsets if total_onsets else 0
