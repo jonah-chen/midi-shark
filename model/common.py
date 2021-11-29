@@ -112,7 +112,6 @@ class SplitModule(nn.Module):
             if validation_data:
                 result = self.val_split(
                     validation_data,
-                    split=split,
                     batch_size=batch_size,
                     shuffle=shuffle,
                     num_workers=num_workers,
