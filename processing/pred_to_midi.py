@@ -1,0 +1,133 @@
+from midiutil.MidiFile import MIDIFile
+import numpy as np
+import os
+from dotenv import load_dotenv
+import argparse
+
+def create_frames_velocity_dict(frames, velocities = None):
+    '''
+        Creates two dictionaries where the keys are (note, time)
+        and the values are the duration and velocity of the note.
+
+        If velocities = None, then the velocity is set to 50.
+    '''
+    note_dict = {}
+    velocity_dict = {}
+
+    for i in range(len(frames)):
+        # Go through every note:
+        j_last = -1
+
+        for j in range(len(frames[0])):
+            
+            is_played = (frames[i][j] == 1)
+            if j == 0: is_onset = is_played
+            else: is_onset = is_played and frames[i][j-1] == 0
+
+            if is_played and is_onset:
+                note_dict[(i+21, j)] = 1 # Note is on
+
+                # Set Velocity
+                if type(velocities) == type(None):
+                    velocity_dict[(i+21, j)] = 50
+                else:
+                    velocity_dict[(i+21, j)] = velocities[i][j]
+                j_last = j # Reset the onset time
+
+            elif is_played and not is_onset:
+                note_dict[(i+21, j_last)] += 1
+
+    return note_dict, velocity_dict
+
+def write_to_midi(output_file, note_dict, velocity_dict):
+    '''
+        Takes in the note duration and velocity dictionaries and writes
+        them to a midi file.
+
+        The midi file is saved to the output_file.
+
+        If velocity_dict is None, then the velocity is set to 50.
+    '''
+
+    mf = MIDIFile(1) # only 1 track
+    track = 0   # the only track
+    time = 0    # start at the beginning
+
+    beat_f = 2 # how many times the bpm
+    mf.addTrackName(track, time, "Sample Track")
+    mf.addTempo(track, time, 60*beat_f)
+    hop_length=20*1000/862
+    f = hop_length/(1000)*beat_f
+
+    # add some notes
+    channel = 0
+
+    for i in range(len(note_dict)):
+        onset_list = list(note_dict.keys())
+        note = int(onset_list[i][0])
+
+        time = np.ceil(onset_list[i][1]*f*16)/16 # Round up to the nearest 16th note
+        duration = np.ceil(note_dict[onset_list[i]]*f*16)/16 # Round up to the nearest 16th note
+
+        velocity = int(list(velocity_dict.values())[i]*127) if velocity_dict != None else 50
+
+        mf.addNote(track, channel, note, time, duration, velocity)
+
+    with open(output_file, 'wb') as f:
+        mf.writeFile(f)
+
+def merge_songs(frame_input_folder, velocity_input_folder, output_file):
+    '''
+        Takes in a folder of 20s numpy files and combines them 
+        to a single numpy file
+    '''
+    frame_list = os.listdir(frame_input_folder)
+    velocity_list = os.listdir(velocity_input_folder)
+
+    frames = None
+    velocities = None
+
+    for f in frame_list:
+        frame_single = np.load(os.path.join(frame_input_folder, f))
+        vel_single = np.load(os.path.join(velocity_input_folder, f))
+
+        # Initialize at the first frame
+        if frames is None:
+            frames = frame_single
+            velocities = vel_single
+
+        # Concatenate the frames
+        else:
+            frames = np.concatenate((frames, frame_single), axis=1)
+            velocities = np.concatenate((velocities, vel_single), axis=1)
+    
+    return frames, velocities
+
+def folder_to_midi(frame_input_folder, velocity_input_folder, output_file):
+    '''
+        Takes in folders of 20s numpy files and combines them into a single
+        midi file. 
+    '''
+    frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
+    note_dict, velocity_dict = create_frames_velocity_dict(frames, velocities)
+    write_to_midi(output_file, note_dict, velocity_dict)
+
+if __name__ == '__main__':
+    '''
+        Takes in a folder of 20s numpy files and combines them 
+        to a single numpy file
+    '''
+    load_dotenv(verbose=True)
+    input_path = os.environ.get('pathname')
+    output_path = os.environ.get('dataname')
+
+    parser = argparse.ArgumentParser(description='Type in frame_folder, velocity_folder, output_name:')
+    parser.add_argument('--f', help='path to input frames folder', type=str)
+    parser.add_argument('--v', help='path to input frames folder', type=str)
+    parser.add_argument('--o', help='output midi file name', type=str)
+
+    args = parser.parse_args()
+
+    folder_to_midi(args.f, args.v, args.o)
+
+# python3 pred_to_midi.py --f ../data/frames/2018/MIDI-Unprocessed_Recital1-3_MID--AUDIO_03_R1_2018_wav--2 --v ../data/velocities/2018/MIDI-Unprocessed_Recital1-3_MID--AUDIO_03_R1_2018_wav--2 --o test.mid
