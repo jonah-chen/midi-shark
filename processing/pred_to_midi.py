@@ -3,6 +3,7 @@ import numpy as np
 import os
 from dotenv import load_dotenv
 import argparse
+from midi2audio import FluidSynth, DEFAULT_SAMPLE_RATE, DEFAULT_SOUND_FONT
 
 def create_frames_velocity_dict(frames, velocities = None):
     '''
@@ -105,15 +106,19 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
     
     return frames, velocities
 
-def folder_to_midi(frame_input_folder, velocity_input_folder, output_file):
+def folder_to_midi(frame_input_folder, velocity_input_folder, output_file, audio = True, sound_font=DEFAULT_SOUND_FONT, sample_rate=DEFAULT_SAMPLE_RATE):
     '''
         Takes in folders of 20s numpy files and combines them into a single
         midi file. 
+
+        audio: Creates audio as well if true
     '''
     frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
     note_dict, velocity_dict = create_frames_velocity_dict(frames, velocities)
     write_to_midi(output_file, note_dict, velocity_dict)
-    
+    if audio == True:
+        fs = FluidSynth(sound_font, sample_rate)
+        fs.midi_to_audio(output_file, output_file[:-4]+'.wav')
 
 if __name__ == '__main__':
     '''
@@ -126,7 +131,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Type in frame_folder, velocity_folder, output_name:')
     parser.add_argument('--f', help='path to input frames folder', type=str)
-    parser.add_argument('--v', help='path to input frames folder', type=str)
+    parser.add_argument('--v', help='path to input velocities folder', type=str)
     parser.add_argument('--o', help='output midi file name', type=str)
 
     args = parser.parse_args()
