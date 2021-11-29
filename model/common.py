@@ -52,7 +52,7 @@ class SplitModule(nn.Module):
             save_path (str): The path to save the model to. Defaults to 'dummy'.
             if save_path is None, the model is not saved.
         """
-        train_start_time = int(time()) // 1000000
+        train_start_time = int(time()) % 1000000
         
         if verbose:
             print(sum(p.numel()

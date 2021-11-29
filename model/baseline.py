@@ -72,7 +72,7 @@ class OnsetsOffsetsFramesBaseline(nn.Module):
         validation_data=None,
         save_path='dummy'
     ):
-        train_start_time = int(time()) // 1000000
+        train_start_time = int(time()) % 1000000
 
         if verbose:
             print(sum(p.numel()
