@@ -8,7 +8,7 @@ def precision(y_true, y_pred):
     true_positives = torch.sum(y_true & y_pred)
     predicted_positives = torch.sum(y_pred)
     precision = true_positives / (predicted_positives + 1e-7)
-    return precision
+    return precision.item()
 
 def recall(y_true, y_pred):
     """Recall metric.
@@ -18,7 +18,7 @@ def recall(y_true, y_pred):
     true_positives = torch.sum(y_true & y_pred)
     possible_positives = torch.sum(y_true)
     recall = true_positives / (possible_positives + 1e-7)
-    return recall
+    return recall.item()
 
 def f1_score(y_true, y_pred):
     """F1 score.
@@ -27,4 +27,4 @@ def f1_score(y_true, y_pred):
     """
     precision = precision(y_true, y_pred)
     recall = recall(y_true, y_pred)
-    return 2 * ((precision * recall) / (precision + recall + 1e-7))
+    return 2 * ((precision * recall) / (precision + recall + 1e-7)).item()

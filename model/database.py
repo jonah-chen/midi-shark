@@ -118,22 +118,33 @@ class OnsetsFramesVelocity(Dataset):
     and onsets, offsets, frames, and velocities (-1,88,1000,) as outputs
     '''
 
-    def __init__(self, data_folder, samples=None):
+    def __init__(self, data_folder, split='train', samples=None):
         """
         Args:
             data_folder (string): Path to the folder that contains everything.
             samples (int): Number of samples to load. Defaults to None meaning all samples.
         """
-
         SPECTROGRAM_REAL_PATH = os.path.join(data_folder, 'spectrograms_real')
         ONSET_PATH = os.path.join(data_folder, 'onsets')
         OFFSET_PATH = os.path.join(data_folder, 'offsets')
         FRAME_PATH = os.path.join(data_folder, 'frames')
         VELOCITY_PATH = os.path.join(data_folder, 'velocities')
 
+        if split == 'train':
+            # include every year except the last two
+            years = os.listdir(SPECTROGRAM_REAL_PATH)[:-2]
+        elif split == 'val':
+            # include the second last year
+            years = os.listdir(SPECTROGRAM_REAL_PATH)[-2:-1]
+        elif split == 'test':
+            # include the last year
+            years = os.listdir(SPECTROGRAM_REAL_PATH)[-1:]
+        else:
+            raise ValueError('split must be either train, val, or test')
+
         # Get all the names in spectrograms_real
         self.real, self.onsets, self.offsets, self.frames, self.velocities = {}, {}, {}, {}, {}
-        for year in os.listdir(SPECTROGRAM_REAL_PATH):
+        for year in years:
             real_songs = os.listdir(os.path.join(SPECTROGRAM_REAL_PATH, year))
             onsets = os.listdir(os.path.join(ONSET_PATH, year))
             offsets = os.listdir(os.path.join(OFFSET_PATH, year))
@@ -187,19 +198,18 @@ class OnsetsFramesVelocity(Dataset):
         onsets_song = self.onsets[song_name]
         offsets_song = self.offsets[song_name]
         frames_song = self.frames[song_name]
-        velocities_song = self.velocities[song_name] 
-        return {'real'      : np.load(real_song),
-                'onsets'    : np.load(onsets_song).astype(np.float32),
-                'offsets'   : np.load(offsets_song).astype(np.float32),
-                'frames'    : np.load(frames_song).astype(np.float32),
+        velocities_song = self.velocities[song_name]
+        return {'real': np.load(real_song),
+                'onsets': np.load(onsets_song).astype(np.float32),
+                'offsets': np.load(offsets_song).astype(np.float32),
+                'frames': np.load(frames_song).astype(np.float32),
                 'velocities': np.load(velocities_song)}
 
-    def train(
+    def train_split(
         self,
         model,
         split='onsets',
         batch_size=4,
-        samples=None,
         shuffle=True,
         num_workers=24,
         epochs=1,
@@ -207,9 +217,38 @@ class OnsetsFramesVelocity(Dataset):
         device='cuda',
         loss_fn=BCEWithLogitsLoss,
         optimizer=Adam,
-        lr=0.0006
+        lr=0.0006,
+        validation_data=None,
+        save_path=None
     ):
-        data_loader = DataLoader(self, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        """
+        Train the splot of the model on the dataset.
+
+        Args:
+            model (nn.Module): The model to train.
+            split (str): The split to train on. Must be either 'onsets', 
+            'offsets', 'frames', or 'velocities'. Defaults to 'onsets'.
+            batch_size (int): The batch size to use. Defaults to 4.
+            shuffle (bool): Whether to shuffle the dataset. Defaults to True.
+            num_workers (int): Number of workers to use. Defaults to 24.
+            epochs (int): Number of epochs to train for. Defaults to 1.
+            verbose (bool): Whether to print out extra details. Defaults to True.
+            device (str): The device to train on. Defaults to 'cuda'. Must change to 'cpu' if no GPU is available.
+            loss_fn (nn.Module): The loss function to use. Defaults to BCEWithLogitsLoss.
+            optimizer (nn.Module): The optimizer to use. Defaults to Adam.
+            lr (float): The learning rate to use. Defaults to 0.0006.
+            validation_data (tuple): The validation data to use. Defaults to None, meaning validation is not performed.
+        """
+        if split not in ['onsets', 'offsets', 'frames', 'velocities']:
+            raise ValueError(
+                'split must be either onsets, offsets, frames, or velocities')
+
+        if verbose:
+            print(sum(p.numel()
+                      for p in model.parameters() if p.requires_grad), 'parameters')
+
+        data_loader = DataLoader(
+            self, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
         criterion = loss_fn()
         optim = optimizer(model.parameters(), lr=lr)
 
@@ -218,14 +257,15 @@ class OnsetsFramesVelocity(Dataset):
 
             # start training model
             model.train()
-            data_iter = tqdm(enumerate(data_loader), ascii=True, total=len(data_loader)) if verbose else enumerate(data_loader)
+            data_iter = tqdm(enumerate(data_loader), ascii=True, total=len(
+                data_loader)) if verbose else enumerate(data_loader)
             for i, batch in data_iter:
                 # get data
-                spec = batch['real'].to(device) 
+                spec = batch['real'].to(device)
                 truth = batch[split].to(device)
-                
-                spec = spec.transpose(1,2)
-                truth = truth.transpose(1,2)
+
+                spec = spec.transpose(1, 2)
+                truth = truth.transpose(1, 2)
 
                 # forward pass
                 out = model(spec, truth)
@@ -236,25 +276,109 @@ class OnsetsFramesVelocity(Dataset):
                 loss.backward()
                 optim.step()
 
-                if verbose:
-                    # calculate precision, recall and f1 score
-                    pred = out > 0
-                    with torch.no_grad():
-                        P = precision(truth>0, pred).item()
-                        R = recall(truth>0, pred).item()
-                        F1 = 2 * P * R / (P + R + 1e-8)
-                        min_ = torch.min(out).item()
-                        max_ = torch.max(out).item()
+                # calculate precision, recall and f1 score
+                pred = out > 0
+                with torch.no_grad():
+                    P = precision(truth > 0, pred)
+                    R = recall(truth > 0, pred)
 
                     # update loss, precision, recall, f1 score and min/max
                     epoch_loss += loss.item()
                     epoch_P += P
                     epoch_R += R
-                    epoch_F1 += F1
-                    epoch_min += min_
-                    epoch_max += max_
+                    epoch_F1 += 2 * P * R / (P + R + 1e-8)
+                    epoch_min += torch.min(out).item()
+                    epoch_max += torch.max(out).item()
 
-                    data_iter.set_description(f'Epoch {epoch + 1}/{epochs} - Loss: {epoch_loss/(i+1):.4f} - P: {100*epoch_P/(i+1):.2f}% - R: {100*epoch_R/(i+1):.2f}% - F1: {100*epoch_F1/(i+1):.2f}% - [{epoch_min/(i+1):.4f},{epoch_max/(i+1):.4f}]')
+                if verbose:
+                    data_iter.set_description(
+                        f'Epoch {epoch + 1}/{epochs} - Loss: {epoch_loss/(i+1):.4f} - P: {100*epoch_P/(i+1):.2f}% - R: {100*epoch_R/(i+1):.2f}% - F1: {100*epoch_F1/(i+1):.2f}% - [{epoch_min/(i+1):.2f},{epoch_max/(i+1):.2f}]')
+                else:
+                    print(
+                        f'Epoch {epoch + 1}/{epochs} - Loss: {epoch_loss/(i+1):.4f} - F1: {100*epoch_F1/(i+1):.2f}%')
+
+            # perform validation if validation data is not None
+            if validation_data:
+                result = validation_data.val_split(
+                    model,
+                    split=split,
+                    batch_size=batch_size,
+                    shuffle=shuffle,
+                    num_workers=num_workers,
+                    device=device
+                )
+
+                if verbose:
+                    print(
+                        f"Validation -  P: {result['P']:.2f}% - R: {result['R']:.2f}% - F1: {result['F1']:.2f}% - [{result['min']:.2f},{result['max']:.2f}]")
+                else:
+                    print(f"Validation - F1: {result['F1']:.2f}%")
+
+            # save model if save_path is not None, save model
+            if save_path:
+                torch.save(model.state_dict(), save_path)
+
+    def val_split(
+        self,
+        model,
+        split='onsets',
+        batch_size=4,
+        shuffle=True,
+        num_workers=24,
+        device='cuda'
+    ):
+        """
+        Validate the model on the dataset. This generally should not be used for 
+        training split. 
+
+        Args:
+            model (nn.Module): The model to validate.
+            split (str): The split to validate on. Must be either 'onsets', 
+            'offsets', 'frames', or 'velocities'. Defaults to 'onsets'.
+            batch_size (int): The batch size to use. Defaults to 4.
+            shuffle (bool): Whether to shuffle the dataset. Defaults to True.
+            num_workers (int): Number of workers to use. Defaults to 24.
+            device (str): The device to validate on. Defaults to 'cuda'. Must change to 'cpu' if no GPU is available.
+
+        Returns:
+            dict: A dictionary containing the precision, recall, f1 score, min, and max.
+        """
+        data_loader = DataLoader(
+            self, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+
+        P, R, F1, min_, max_ = 0, 0, 0, 0, 0
+
+        model.eval()
+
+        with torch.no_grad():
+            for i, batch in enumerate(data_loader):
+                # get data
+                spec = batch['real'].to(device)
+                truth = batch[split].to(device)
+
+                spec = spec.transpose(1, 2)
+                truth = truth.transpose(1, 2)
+
+                # forward pass
+                out = model(spec, truth)
+                pred = out > 0
+                truth = truth > 0
+                # calculate precision, recall
+                p = precision(truth, pred)
+                r = recall(truth, pred)
+                # accumulate precision, recall, f1 score, min, max
+                P += p
+                R += r
+                F1 += 2 * p * r / (p + r + 1e-8)
+                min_ += torch.min(out).item()
+                max_ += torch.max(out).item()
+
+        return {'P': 100*P/len(data_loader),
+                'R': 100*R/len(data_loader),
+                'F1': 100*F1/len(data_loader),
+                'min': min_/len(data_loader),
+                'max': max_/len(data_loader)}
+
 
 if __name__ == '__main__':
     dataset = OnsetsFramesVelocity(output_path)

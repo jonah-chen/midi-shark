@@ -111,6 +111,7 @@ def folder_to_midi(frame_input_folder, velocity_input_folder, output_file, audio
     '''
         Takes in folders of 20s numpy files and combines them into a single
         midi file. 
+
         audio: Creates audio as well if true
     '''
     frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
