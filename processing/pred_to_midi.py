@@ -3,6 +3,7 @@ import numpy as np
 import os
 from dotenv import load_dotenv
 import argparse
+from midi2audio import FluidSynth, DEFAULT_SAMPLE_RATE, DEFAULT_SOUND_FONT
 
 def create_frames_velocity_dict(frames, velocities = None):
     '''
@@ -81,6 +82,7 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
         to a single numpy file
     '''
     frame_list = os.listdir(frame_input_folder)
+    frame_list = sorted(frame_list, key=lambda x: float(x.split('_')[1].split('.')[0]))
 
     frames = None
     velocities = None
@@ -88,32 +90,35 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
     for f in frame_list:
         frame_single = np.load(os.path.join(frame_input_folder, f))
         
-        if velocity_input_folder != "None":
+        if type(velocity_input_folder) != type(None):
             vel_single = np.load(os.path.join(velocity_input_folder, f))
 
         # Initialize at the first frame
         if frames is None:
             frames = frame_single
-            if velocity_input_folder != "None":
+            if type(velocity_input_folder) != type(None):
                 velocities = vel_single
 
         # Concatenate the frames
         else:
             frames = np.concatenate((frames, frame_single), axis=1)
-            if velocity_input_folder != "None":
+            if type(velocity_input_folder) != type(None):
                 velocities = np.concatenate((velocities, vel_single), axis=1)
     
     return frames, velocities
 
-def folder_to_midi(frame_input_folder, velocity_input_folder, output_file):
+def folder_to_midi(frame_input_folder, velocity_input_folder, output_file, audio = True, sound_font=DEFAULT_SOUND_FONT, sample_rate=DEFAULT_SAMPLE_RATE):
     '''
         Takes in folders of 20s numpy files and combines them into a single
         midi file. 
+        audio: Creates audio as well if true
     '''
     frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
     note_dict, velocity_dict = create_frames_velocity_dict(frames, velocities)
     write_to_midi(output_file, note_dict, velocity_dict)
-    
+    if audio == True:
+        fs = FluidSynth(sound_font, sample_rate)
+        fs.midi_to_audio(output_file, output_file[:-5]+'.wav')
 
 if __name__ == '__main__':
     '''
@@ -126,11 +131,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Type in frame_folder, velocity_folder, output_name:')
     parser.add_argument('--f', help='path to input frames folder', type=str)
-    parser.add_argument('--v', help='path to input frames folder', type=str)
+    parser.add_argument('--v', help='path to input velocities folder', type=str)
     parser.add_argument('--o', help='output midi file name', type=str)
 
     args = parser.parse_args()
-
+    if args.v == 'None':
+        args.v = None
     folder_to_midi(args.f, args.v, args.o)
-
-# python3 pred_to_midi.py --f ../data/frames/2018/MIDI-Unprocessed_Recital1-3_MID--AUDIO_03_R1_2018_wav--2 --v ../data/velocities/2018/MIDI-Unprocessed_Recital1-3_MID--AUDIO_03_R1_2018_wav--2 --o test.mid
