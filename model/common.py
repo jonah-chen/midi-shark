@@ -192,25 +192,25 @@ class SplitModule(nn.Module):
 
 
 class ConvStack(nn.Module):
-    def __init__(self, input_features, output_features):
+    def __init__(self, input_features, output_features, bias=False):
         super().__init__()
 
         # input is batch_size * 1 channel * frames * input_features
         self.cnn = nn.Sequential(
             # layer 0
-            nn.Conv2d(1, output_features // 16, (3, 3), padding=1, bias=False),
+            nn.Conv2d(1, output_features // 16, (3, 3), padding=1, bias=bias),
             nn.BatchNorm2d(output_features // 16),
             nn.ReLU(),
             # layer 1
             nn.Conv2d(output_features // 16, output_features //
-                      16, (3, 3), padding=1, bias=False),
+                      16, (3, 3), padding=1, bias=bias),
             nn.BatchNorm2d(output_features // 16),
             nn.ReLU(),
             # layer 2
             nn.MaxPool2d((1, 2)),
             nn.Dropout(0.25),
             nn.Conv2d(output_features // 16,
-                      output_features // 8, (3, 3), padding=1, bias=False),
+                      output_features // 8, (3, 3), padding=1, bias=bias),
             nn.BatchNorm2d(output_features // 8),
             nn.ReLU(),
             # layer 3
