@@ -6,3 +6,4 @@ mido==1.2
 midi2audio==0.1.1
 tqdm==4.62.2
 torch==1.8.2
+midiutil==1.2.1
