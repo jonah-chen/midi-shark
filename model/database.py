@@ -140,6 +140,8 @@ class OnsetsFramesVelocity(Dataset):
         elif split == 'test':
             # include the last year
             years = os.listdir(SPECTROGRAM_REAL_PATH)[-1:]
+        elif type(split) is int:
+            years = os.listdir(SPECTROGRAM_REAL_PATH)[split:split+1]
         else:
             raise ValueError('split must be either train, val, or test')
 

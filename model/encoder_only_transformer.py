@@ -403,7 +403,9 @@ class OnsetsFrames(SplitModule):
         batch_size=4,
         shuffle=True,
         num_workers=24,
-        device='cuda'
+        device='cuda',
+        onset_thresh=0,
+        frame_thresh=0
     ):
         """
         Validate the model on the dataset. This generally should not be used for 
@@ -441,8 +443,8 @@ class OnsetsFrames(SplitModule):
                 out_onsets, out_frames = self(spec)
 
                 # calculate precision, recall and f1 score
-                onsets_pred = out_onsets > 0
-                frames_pred = out_frames > 0
+                onsets_pred = out_onsets > onset_thresh
+                frames_pred = out_frames > frame_thresh
                 onsets = onsets > 0
                 truth = truth > 0
                 
@@ -477,14 +479,34 @@ if __name__ == '__main__':
     val_dataset = OnsetsFramesVelocity(output_path, split='val')
     test_set = OnsetsFramesVelocity(output_path, split='test')
 
-    # load velocity model
+    # # load velocity model
     # model = VelocityModel(229, 512, 16, 512, 8)
     # model.load_state_dict(torch.load("./velocity_190898.pt"))
     # model.cuda()
     # model.fit(dataset, validation_data=val_dataset, epochs=12, lr=4e-5, loss_fn=modified_mse, save_path='velocity')
 
     # load onsets frames model
-    # model = OnsetsFrames(229, 512, 16, 512, 8, bias2=True, dropout=0.1)
-    # model.load_state_dict(torch.load("./final8p_292941.pt"))
-    # model.cuda()
-    model.fit(dataset, validation_data=val_dataset, epochs=6, lr=1e-5, save_path='final8p', batch_size=2)
+    model = OnsetsFrames(229, 512, 16, 512, 8, bias2=True, dropout=0.1)
+    model.load_state_dict(torch.load("./final8p_307822.pt"))
+    model.cuda()
+
+    # import numpy as np
+    # x = np.array([-10,-5, -2, -1, -0.7, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 2, 5, 10])
+    # y = []
+
+    # for thresh in x:
+    #     y.append(model.val_split(val_dataset, batch_size=32, onset_thresh=thresh, frame_thresh=thresh))
+    # print(x)
+    # print(y)
+
+    # import matplotlib.pyplot as plt
+    # plt.plot(x,y['oP'], label='oP')
+    # plt.plot(x,y['oR'], label='oR')
+    # plt.plot(x,y['oF1'], label='oF1')
+    # plt.plot(x,y['fP'], label='fP')
+    # plt.plot(x,y['fR'], label='fR')
+    # plt.plot(x,y['fF1'], label='fF1')
+    # plt.legend()
+    # plt.show()
+
+    model.fit(dataset, validation_data=val_dataset, epochs=6, lr=3e-6, save_path='final8p', batch_size=2)
