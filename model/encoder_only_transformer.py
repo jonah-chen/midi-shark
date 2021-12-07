@@ -12,6 +12,9 @@ from tqdm import tqdm
 from torch.nn import BCEWithLogitsLoss
 
 class TransformerModel(SplitModule):
+    """
+    Model that consists of a conv-stack and transformer encoder.
+    """
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
                  nlayers: int, dropout: float = 0.0, split='onsets', bias=False):
         super().__init__(split)
@@ -31,6 +34,9 @@ class TransformerModel(SplitModule):
         return self.decoder(src)
 
 class TransformerOnlyModel(SplitModule):
+    """
+    Model that consists of a transformer encoder only
+    """
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
                  nlayers: int, dropout: float = 0.0, split='onsets'):
         super().__init__(split)
@@ -49,6 +55,10 @@ class TransformerOnlyModel(SplitModule):
         return self.decoder(src)
     
 class VelocityModel(SplitModule):
+    """
+    Model that consists of a conv-stack and transformer encoder for predicting 
+    velocities of notes.
+    """
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
                 nlayers: int, dropout: float = 0.2):
         super().__init__('velocities')
@@ -231,6 +241,9 @@ class VelocityModel(SplitModule):
 
 
 class PretrainedFrames(SplitModule):
+    """
+    Frames model that uses a pretrained onsets model with weights locked.
+    """
     def __init__(self, onset_model, ntoken: int, d_model: int, nhead: int, d_hid: int,
                  nlayers: int, dropout: float = 0.0):
         super().__init__('frames')
@@ -255,12 +268,20 @@ class PretrainedFrames(SplitModule):
         return self.decoder(x)
 
 class OnsetsFrames(SplitModule):
+    """
+    Onsets and frames model that uses a transformer encoder for both onsets 
+    and frames. Can optionally take in a pretrained onsets model but the weights
+    for the onsets model will be fine-tuned during training. 
+    """
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
                  nlayers: int, dropout: float = 0.0, model_path=None, bias1=False, bias2=False):
         super().__init__('frames')
-        self.onset_model = TransformerModel(ntoken, d_model, nhead, d_hid, nlayers, dropout, bias=bias1)
         if model_path:
-            self.onset_model.load_state_dict(torch.load(model_path))
+            if type(model_path) is str: 
+                self.onset_model = TransformerModel(ntoken, d_model, nhead, d_hid, nlayers, dropout, bias=bias1)
+                self.onset_model.load_state_dict(torch.load(model_path))
+            else:
+                self.onset_model = model_path
         self.model_type = 'Transformer'
         self.pos_encoder = PositionalEncoding(d_model+88)
         encoder_layers = TransformerEncoderLayer(d_model+88, 20, d_hid, dropout, batch_first=True)
@@ -470,21 +491,48 @@ class OnsetsFrames(SplitModule):
         }
 
     
-    
+def train(model='frames', save_path='default', epochs=12, batch_size=4, lr=4e-5):
+    """
+    Train the model. If a model is given, the model would be trained. Otherwise, 
+    a new model is created and trained.
 
-if __name__ == '__main__':
+    Args:
+        model (nn.Module or str): The model to train. If a string is given,
+        the model is created. Defaults to 'frames'.
+        save_path (str): The path to save the model to. Defaults to 'default', 
+        which saves the model with the name based on the model type.
+        epochs (int): The number of epochs to train. Defaults to 12.
+        batch_size (int): The batch size to use. Defaults to 4.
+        lr (float): The learning rate to use. Defaults to 4e-5.
+    """
     dataset = OnsetsFramesVelocity(output_path)
     val_dataset = OnsetsFramesVelocity(output_path, split='val')
-    test_set = OnsetsFramesVelocity(output_path, split='test')
 
-    # load velocity model
-    # model = VelocityModel(229, 512, 16, 512, 8)
-    # model.load_state_dict(torch.load("./velocity_190898.pt"))
-    # model.cuda()
-    # model.fit(dataset, validation_data=val_dataset, epochs=12, lr=4e-5, loss_fn=modified_mse, save_path='velocity')
+    if type(model) is str:
+        if model == 'velocity':
+            model = VelocityModel(229, 512, 16, 512, 8)
+        elif model == 'onsets':
+            model = TransformerModel(229, 512, 16, 512, 8)
+        elif model == 'frames':
+            model = TransformerModel(229, 512, 16, 512, 8, bias2=True, dropout=0.1)
 
-    # load onsets frames model
-    # model = OnsetsFrames(229, 512, 16, 512, 8, bias2=True, dropout=0.1)
-    # model.load_state_dict(torch.load("./final8p_292941.pt"))
-    # model.cuda()
-    model.fit(dataset, validation_data=val_dataset, epochs=6, lr=1e-5, save_path='final8p', batch_size=2)
+    model.cuda()
+    if save_path == 'default':
+        model.fit(x=dataset, epochs=epochs, batch_size=batch_size, lr=lr, validation_data=val_dataset)
+        return model
+
+    model.fit(x=dataset, epochs=epochs, batch_size=batch_size, lr=lr, save_path=save_path, validation_data=val_dataset)
+    return model
+
+def test(model, dataset=OnsetsFramesVelocity, batch_size=32):
+    """
+    Test the model on the test set.
+    """
+    test_set = dataset(output_path, split='test')
+    return model.val_split(test_set, batch_size=batch_size)
+
+if __name__ == '__main__':
+    model = train(model='onsets')
+    model = OnsetsFrames(229, 512, 16, 512, 8, bias2=True, dropout=0.1, model_path=model)
+    train(model=train(model=model), epochs=6, lr=1e-5)
+    train(model='velocity')
