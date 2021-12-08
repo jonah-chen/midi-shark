@@ -24,13 +24,10 @@
   {\normalfont\scshape}{\thesubsubsection}{1em}{}
 \pagenumbering{arabic}
 \newtheorem{definition}{Definition}[section]
-\usepackage[
-    backend=biber, 
-    natbib=true,
-    style=numeric,
-    sorting=none
-]{biblatex}
-\addbibresource{citations.bib}
+\usepackage[backend=biber,style=ieee,natbib=true]{biblatex}
+\renewcommand{\bibfont}{\footnotesize} % for IEEE bibfont size
+\addbibresource{citations.bib} %added
+
 \usepackage{csquotes}
 
 \title{\vspace{-50pt}\bfseries{\Large{Midi Shark: For Piano Transcription}}}
@@ -54,5 +51,5 @@ We developed a model that is more accurate at transcribing piano recordings by a
 \section{Ethical Considerations}
 \section{References}
 
-\printbibliography[title={}]
+\printbibliography
 \end{document}

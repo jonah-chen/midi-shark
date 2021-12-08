@@ -20,7 +20,13 @@ __pycache__/
 *.fot
 *.cb
 *.cb2
-.*.lb
+*.lb
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.synctex.gz
+*.run.xml
 
 # Distribution / packaging
 .Python
