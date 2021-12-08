@@ -79,11 +79,37 @@ The baseline model we compare our model to is the LSTM described in the \textit{
 
 This is a reasonable choice since our hypothesis is that introducing a transformer will improve the performance of the model. Since Google researchers likely have far greater computing resources than us and better data processing, to create a better comparison, we will write and train the LSTM model on the same processed data and machine used for the Transformer model.  
 
+
+
 \section{Quantitative Results}
+
+
+
+\begin{center}
+    \begin{tabular}{|c|c|}
+        \hline
+        Model& Frames F1 Score \\
+        \hline
+        Sigtia et al., 2016 & \(72.22\%\)\\
+        \hline
+        Kelz et al., 2016 & \(71.60\%\)\\
+        \hline
+        Melodyne\footnote{Commercial software, not machine learning model.} & \(58.57\%\)\\
+        \hline
+        Google’s 2017 Model & \(78.30\%\)\\
+        \hline
+        \textbf{Google’s 2021 Model} & \(\mathbf{82.18\%}\)\\
+        \hline
+        Midi Shark (Us) & \(79.01\%\)\\
+        \hline
+    \end{tabular}
+\end{center}
+
 \section{Testing}
 One concern is that the music in the Maestro dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
 
 We decided to record our own music.
+
 
 \section{Discussion}
 \section{Ethical Considerations}
@@ -92,6 +118,5 @@ In the United States, the music sheet industry is worth around 1 billion USD\cit
 However, this technology will negatively affect small composers, who may make a living by selling sheet music to their music, for example on services such as MusicSpoke\cite{musicspoke}. If this technology is accurate and readily available, it may encourage musicians to automatically generate the sheet music to the songs they like, instead of purchasing and supporting artists. Fortunately, transcribing isn’t just about having the right notes, but the style in which it is presented. This is why two transcribers will not produce the same sheet music for the same song.
 
 The MASTERO dataset and the scope of our project consist of working solely with music, so there is a low risk of discriminating against humans from pre-processing to training and post-processing. However, a large majority of the music from the dataset is Western music, so the results would likely be more reliable towards Western music. Thus, people from other cultures may not find the same success in this model as people in Western cultures do. To address this, we will attempt to find other similar datasets that were trained on music from other cultures.
-
 \printbibliography
 \end{document}
