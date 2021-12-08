@@ -15,9 +15,9 @@
 \usepackage{fancyhdr}
 \usepackage{siunitx}
 \usepackage{amsmath}
+
 \pagestyle{fancy}
-\titleformat{\section}
-  {\large\scshape}{\thesection}{1em}{}
+\titleformat{\section}{\large\scshape}{\thesection}{1em}{}
 \titleformat{\subsection}
   {\normalfont\scshape}{\thesubsection}{1em}{}
 \titleformat{\subsubsection}
@@ -30,13 +30,29 @@
     style=numeric,
     sorting=none
 ]{biblatex}
-\usepackage{csquotes}
 \addbibresource{citations.bib}
+\usepackage{csquotes}
 
 \title{\vspace{-50pt}\bfseries{\Large{Midi Shark: For Piano Transcription}}}
 \author{\normalfont{Jonah Chen, QiLin Xue, Joe Hattori, Khanatat Thangwatthanarat}\\\small{University of Toronto}\\\vspace{-10pt}\small{\url{{jonah.chen,qilin.xue,joe.hattori,k.thangwatthanarat}@mail.utoronto.ca}}}
-\date{}
+\date{\today}
 \begin{document}
 \maketitle
+\section{Introduction}
+Transcription of music is the process of determining the pitches and timing of notes from recorded audio files. Transcription has always been a specialized task that requires years of musical training. Transcription is even more challenging for polyphonic music, such as piano, which features the simultaneous production of two or more tones. The majority of traditional transcription models focus on extracting all of the notes from the recording using the node onset. This, however, is not the way a trained musician approaches the problem\cite{intro}.
 
+We developed a model that is more accurate at transcribing piano recordings by analyzing the recording with a neural network and focusing on both the onsets and offsets of the node. Moreover, since images and audios both have common two-dimensional time-frequency input representations, the fact that CNN performs well in image classification problems suggests that CNN could potentially be used for music transcription [2].
+
+\section{Illustration}
+\section{Background}
+\section{Data Processing}
+\section{Architecture}
+\section{Baseline}
+\section{Quantitative Results}
+\section{Testing}
+\section{Discussion}
+\section{Ethical Considerations}
+\section{References}
+
+\printbibliography[title={}]
 \end{document}
