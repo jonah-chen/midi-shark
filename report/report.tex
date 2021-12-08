@@ -169,7 +169,7 @@ Another way to resolve this issue is to change the threshold for positive predic
   \label{fig:threshold}
 \end{figure}
 
-Finally, we noticed that when training the model, the model would stagonate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. 
+Finally, we noticed that when training the model, the model would stagonate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. We think this may be caused by the initialization of the parameters of the model. The default initialization for pytorch  
 
 \begin{figure}[H]
   \centering
