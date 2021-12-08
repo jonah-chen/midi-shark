@@ -45,6 +45,8 @@ Transcription of music is the process of determining the pitches and timing of n
 
 We developed a model that is more accurate at transcribing piano recordings by analyzing the recording with a neural network and focusing on both the onsets and offsets of the node. Moreover, since images and audios both have common two-dimensional time-frequency input representations, the fact that CNN performs well in image classification problems suggests that CNN could potentially be used for music transcription\cite{onsets_and_frames}.
 
+We also used techniques that are usually used in natural language processing tasks. Not only is this because music transcription is a sequence-to-sequence task, but there are also patterns in music theory that describe whether a sequence of notes ``sounds right,'' similar to how only certain combinations of words ``sounds right''\cite{onsets_and_frames}. 
+
 \textbf{The code is open source and available \href{https://github.com/jonah-chen/midi-shark/}{here}}.
 \section{Illustration}
 The model architecture is shown in figure \ref{fig:architecture}.
@@ -58,7 +60,7 @@ The model architecture is shown in figure \ref{fig:architecture}.
 \section{Background}
 Polyphonic automatic music transcription is a difficult task due to the potential of having multiple notes played simultaneously, causing the harmonics of each note to overlap with the others. Therefore, it is a non-trivial task to transcribe the music using the spectrogram. 
 
-Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve an F1 score of 78.30\% and 82.29\% on frames and notes respectively for the MASTERO dataset, which is arguably the largest dataset for music transcription task.
+Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve success on the MASTERO dataset, which is arguably the largest dataset for music transcription task.
 
 \section{Data Processing}
 The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
@@ -79,10 +81,6 @@ The MIDI files acted as the ground truth, but the files only contained informati
 \end{itemize}
 These arrays act as the labels for each of the three sub-tasks described in figure \ref{fig:architecture}.
 Our data processing can be broken down to two major parts. One is converting WAV files to spectrograms, and the other task is converting MIDI files to a certain kind of form which is easier to train the model.
-
-We chose to convert MIDI files into arrays with time on the x-axis and note on the y-axis. As MIDI files hold when each note begins, how long it lasts, and how strong it was played, we divided MIDI files into three arrays respectively; first array is onsets array, the second array is frames array, and the third array is velocity array.
-
-Since every song has a different length, we divided all the spectrograms and the labels into 20 second segments, so our model will take a 20 second long spectrogram as input.
 
 The downside of this approach is that we might have a clip at the end of the song that is shorter than 20 seconds. This can be resolved by zero-padding, however, since most songs were several minutes long, we did not think this would make a noticeable difference and opted to simply ignore these last few seconds.
 \section{Architecture}
