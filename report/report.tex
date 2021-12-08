@@ -39,10 +39,12 @@
 \author{\normalfont{Jonah Chen, QiLin Xue, Joe Hattori, Khanatat Thangwatthanarat}\\\small{University of Toronto}\\\vspace{-10pt}\small{\url{{jonah.chen,qilin.xue,joe.hattori,k.thangwatthanarat}@mail.utoronto.ca}}}
 \date{\today}
 \begin{document}
+
 \maketitle
 \begin{abstract}
   This project uses transformer encoder to transcribe piano music in a dual-objective fashion similar to the Onsets-Frames model\cite{onsets_and_frames}. Our model was able to achieve a slightly higher F1-score of \(79.01\%\) with significantly less computational power, demonstrating that once again, transformers were able to outperform LSTMs. On real world data, a recording of the \textit{anime} song \begin{CJK}{UTF8}{min}なんでもないや.\end{CJK} played by Jonah Chen was given to the model. We observed the model was able to capture the key elements of the song, although there were still a few mistakes in the transcription.
 \end{abstract}
+
 \section{Introduction}
 Transcription of music is the process of determining the pitches and timing of notes from recorded audio files. Transcription has always been a specialized task that requires years of musical training. Transcription is even more challenging for polyphonic music, such as piano, which features the simultaneous production of two or more tones. The majority of traditional transcription models focus on extracting all of the notes from the recording using the node onset. This, however, is not the way a trained musician approaches the problem\cite{intro}.
 
@@ -69,9 +71,10 @@ Since the advent of machine learning, there have been models developed for solvi
 The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
 To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into \SI{20}{s} non-overlapping segments such that each segment has a shape of $229 \times 862.$ An example spectrogram is shown in figure \ref{fig:spectrogram}, and is heavily inspired from the onsets and frames baseline model\cite{onsets_and_frames}.
-\begin{figure*}
+
+\begin{figure*}[h!]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/spectrogram.png}
+  \includegraphics[width=\linewidth]{figures/spectrogram.png}
   \caption{Example spectrogram of one of the songs in the MAESTRO dataset.}
   \label{fig:spectrogram}
 \end{figure*}
@@ -100,7 +103,7 @@ This is a reasonable choice since our hypothesis is that introducing a transform
 
 \section{Qualitative Results}
 The results of one of the songs in the test set is shown in figure \ref{fig:results}.
-\begin{figure*}
+\begin{figure*}[h!]
   \centering
   \includegraphics[width=\linewidth]{figures/results.png}
   \caption{The frame predictions the model made on one of the songs in the test set. Yellow represents the true positives, purple represents the false negatives and the red represents the false positives.}
@@ -164,7 +167,7 @@ We also noticed in Figure \ref{fig:results} that it is common for the model to s
 
 Another way to resolve this issue is to change the threshold for positive predictions. It is common to consider a ``positive'' prediction of the model outputs a probability greater than \(0.5\) (or a positive logit). However, we discovered using figure \ref{fig:threshold} that using a threshold of \(-0.4\) was able to achieve the highest F1 score on the validation set of just under $79\%$. Moreover, much fewer notes were split up.
 
-\begin{figure}[H]
+\begin{figure}[h!]
   \centering
   \includegraphics[width=\linewidth]{figures/threshold.png}
   \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, \textbf{F1} score) for \textbf{o}nsets and \textbf{f}rames with different threhold logits.}
@@ -173,7 +176,7 @@ Another way to resolve this issue is to change the threshold for positive predic
 
 Finally, we noticed that when training the model, the model would stagonate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. We think this may be caused by the initialization of the parameters of the model. The default initialization for pytorch  
 
-\begin{figure}[H]
+\begin{figure}[h!]
   \centering
   \includegraphics[width=\linewidth]{figures/debug.png}
   \caption{The models progress tracked every minute of training. Blue indicates the loss and orange indicates the \textbf{maximum} logits the model predicted throughout all batches of the training data it saw. Note if that the orange line is below 0 (the orange line reaches 0 slightly before crossing the blue line), the model would not predict any notes being played. This plot was made during debugging so the tick labels are not very clear. What is important is the general behavior.}
