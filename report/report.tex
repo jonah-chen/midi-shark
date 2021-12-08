@@ -46,7 +46,7 @@
 \end{abstract}
 
 \section{Introduction}
-Transcription of music is the process of determining the pitches and timing of notes from recorded audio files. Transcription has always been a specialized task that requires years of musical training. Transcription is even more challenging for polyphonic music, such as piano, which features the simultaneous production of two or more tones. The majority of traditional transcription models focus on extracting all of the notes from the recording using the node onset. This, however, is not the way a trained musician approaches the problem\cite{intro}.
+Transcription of music is the process of determining the pitches and timing of notes from recorded audio files. This has always been a specialized task that requires years of musical training. Transcription becomes even more challenging for polyphonic music, such as piano, which features the simultaneous production of two or more tones. The majority of traditional transcription models focus on extracting all of the notes from the recording using the node onset. This, however, is not the way a trained musician approaches the problem\cite{intro}.
 
 We developed a model that is more accurate at transcribing piano recordings by analyzing the recording with a neural network and focusing on both the onsets and offsets of the node. Moreover, since images and audios both have common two-dimensional time-frequency input representations, the fact that CNN performs well in image classification problems suggests that CNN could potentially be used for music transcription\cite{onsets_and_frames}.
 
@@ -68,7 +68,7 @@ Polyphonic automatic music transcription is a difficult task due to the potentia
 Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve success on the MASTERO dataset, which is arguably the largest dataset for music transcription task.
 
 \section{Data Processing}
-The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
+The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consist of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
 To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into \SI{20}{s} non-overlapping segments such that each segment has a shape of $229 \times 862.$ An example spectrogram is shown in figure \ref{fig:spectrogram}, and is heavily inspired from the onsets and frames baseline model\cite{onsets_and_frames}.
 
@@ -94,10 +94,10 @@ The OF model\cite{onsets_and_frames} had seen success in the task of automatic m
 
 In the OF model, the processed mel-spectrogram data is encoded using a stack of convolutional layers\cite{rainer}. Furthermore, the OF model uses bidirectional LSTM models as decoders. Since 2017, the transformer architecture has revolutionized the processing of sequential data\cite{attention}. Many of today’s state-of-the-art models in fields like natural language processing are based on the transformer. As audio is sequential data, we think it will be advantageous to use a transformer encoder in place of the bidirectional LSTM.
 
-Following similar data flow to OF, we will have a two-headed model with an onset and frame head. The onset prediction is passed as an input to the transformer encoder that decodes the frame predictions. We use the same loss functions for the two heads from OF (a generalization of cross-entropy loss, see eq.1-6 in\cite{onsets_and_frames}). For the velocity model, we use a similar approach to the frames model but without the input from onset prediction. Apart from that, we use the modified version of mean square error instead of a cross-entropy loss as a loss function. For all the models, we use Adam optimizer as our optimization function.  For all the models, we also use fully connected layers in between. For a clearer picture of the model structure, please refer to figure 1 in the introduction section.
+Following similar data flow to OF, we will have a two-headed model with an onset and frame head. The onset prediction is passed as an input to the transformer encoder that decodes the frame predictions. We use the same loss functions for the two heads from OF (a generalization of cross-entropy loss, see eq.1-6 in\cite{onsets_and_frames}). For the velocity model, we use a similar approach to the frames model but without the input from onset prediction. Apart from that, we use the modified version of mean square error instead of a cross-entropy loss as a loss function. For all the models, we use Adam optimizer as our optimization function and we also use fully connected layers in between. For a clearer picture of the model structure, please refer to figure 1 in the introduction section.
 
 \section{Baseline Model}
-The baseline model we compare our model to is the LSTM described in the \textit{Onsets and Frames} (OF) paper by Google\cite{onsets_and_frames}. The model architecture is very simlar to figure \ref{fig:architecture}, except transformers are used instead of LSTMs, and the onsets do not feed back into the LSTM.
+The baseline model we compare our model to is the LSTM described in the \textit{Onsets and Frames} (OF) paper by Google\cite{onsets_and_frames}. The model architecture is very similar to figure \ref{fig:architecture}, except transformers are used instead of LSTMs, and the onsets do not feed back into the LSTM.
 
 This is a reasonable choice since our hypothesis is that introducing a transformer will improve the performance of the model. Since Google researchers likely have far greater computing resources than us and better data processing, to create a better comparison, we will write and train the LSTM model on the same processed data and machine used for the Transformer model.  
 
@@ -114,7 +114,7 @@ At first glance, the frames model seems to be very accurate. However, many notes
 Furthermore, the lower frequencies were not as accurate as the higher frequencies. These characteristics are consistent with other predictions in the test set. The reason for these inconsistencies is explained in the discussion section.
 \section{Quantitative Results}
 
-A piano has 88 keys but a human only has 10 fingers. On average, less than $5\%$ of the notes are pressed at any given time. If we were to use accuracy as our metric, a model that predicts no notes at all would achieve over $95\%$ accuracy. Clearly, accuracy is not a good indicator of the performance of a model. Instead, we opted to use the F1 score
+A piano has 88 keys, but a human only has 10 fingers. On average, less than $5\%$ of the notes are pressed at any given time. If we were to use accuracy as our metric, a model that predicts no notes at all would achieve over $95\%$ accuracy. Clearly, accuracy is not a good indicator of the performance of a model. Instead, we opted to use the F1 score
 \begin{equation}
   F1 = \frac{2PR}{P+R}
 \end{equation}
@@ -163,18 +163,18 @@ Furthermore, there are a few false positives that is exactly one octave above th
 
 To fix this in future models, we can augment our training data by adding in random noise that is consistent with poor microphone quality. We can also adjust the weight of each frequency to better represent the behavior of real-world recording devices. This will allow the model to perform better on new data that is not recorded with a professionally calibrated microphone.
 
-We also noticed in Figure \ref{fig:results} that it is common for the model to split up a note into smaller pieces. This behavior could be explained with the pixel-wise cross-entropy loss function. If the model mispredicts only one pixel, it only incurs a small loss but it will split a note into two, which sounds unpleasant. It is possible to combine the onsets predictions with a classical algorithm to combine these segments.
+We also noticed in Figure \ref{fig:results} that it is common for the model to split up a note into smaller pieces. This behavior could be explained with the pixel-wise cross-entropy loss function. If the model mispredicts only one pixel, it only incurs a small loss, but it will split a note into two, which sounds unpleasant. It is possible to combine the onsets predictions with a classical algorithm to combine these segments.
 
 Another way to resolve this issue is to change the threshold for positive predictions. It is common to consider a ``positive'' prediction of the model outputs a probability greater than \(0.5\) (or a positive logit). However, we discovered using figure \ref{fig:threshold} that using a threshold of \(-0.4\) was able to achieve the highest F1 score on the validation set of just under $79\%$. Moreover, much fewer notes were split up.
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\linewidth]{figures/threshold.png}
-  \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, \textbf{F1} score) for \textbf{o}nsets and \textbf{f}rames with different threhold logits.}
+  \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, \textbf{F1} score) for \textbf{o}nsets and \textbf{f}rames with different threshold logits.}
   \label{fig:threshold}
 \end{figure}
 
-Finally, we noticed that when training the model, the model would stagonate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. We think this may be caused by the initialization of the parameters of the model. The default initialization for pytorch  
+Finally, we noticed that when training the model, the model would stagnate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. We think this may be caused by the initialization of the parameters of the model. The default initialization for pytorch  
 
 \begin{figure}[h!]
   \centering
