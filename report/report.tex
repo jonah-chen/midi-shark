@@ -62,7 +62,13 @@ Since the advent of machine learning, there have been models developed for solvi
 \section{Data Processing}
 The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
-To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$
+To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$ An example spectrogram is shown in figure \ref{fig:spectrogram}, and is heavily inspired from the onsets and frames baseline model\cite{onsets_and_frames}.
+\begin{figure*}
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/spectrogram.png}
+  \caption{Example spectrogram of one of the songs in the MAESTRO dataset.}
+  \label{fig:spectrogram}
+\end{figure*}
 
 The MIDI files acted as the ground truth, but the files only contained information about the onset and offset of each note. We preprocessed each midi file into three arrays of shape $88 \times 862,$ where $88$ is the number of notes. Each entry $(t,n)$ denotes the value of the array at a specific time $t$ and a note $n$.
 \begin{itemize}
@@ -86,7 +92,7 @@ In the OF model, the processed mel-spectrogram data is encoded using a stack of 
 Following similar data flow to OF, we will have a two-headed model with an onset and frame head. The onset prediction is passed as an input to the transformer encoder that decodes the frame predictions. We use the same loss functions for the two heads from OF (a generalization of cross-entropy loss, see eq.1-6 in\cite{onsets_and_frames}). For the velocity model, we use a similar approach to the frames model but without the input from onset prediction. Apart from that, we use the modified version of mean square error instead of a cross-entropy loss as a loss function. For all the models, we use Adam optimizer as our optimization function.  For all the models, we also use fully connected layers in between. For a clearer picture of the model structure, please refer to figure 1 in the introduction section.
 
 \section{Baseline Model}
-The baseline model we compare our model to is the LSTM described in the \textit{Onsets and Frames} paper by Google\cite{onsets_and_frames}. The model architecture is very simlar to figure \ref{fig:architecture}, except transformers are used instead of LSTMs, and the onsets do not feed back into the LSTM.
+The baseline model we compare our model to is the LSTM described in the \textit{Onsets and Frames} (OF) paper by Google\cite{onsets_and_frames}. The model architecture is very simlar to figure \ref{fig:architecture}, except transformers are used instead of LSTMs, and the onsets do not feed back into the LSTM.
 
 This is a reasonable choice since our hypothesis is that introducing a transformer will improve the performance of the model. Since Google researchers likely have far greater computing resources than us and better data processing, to create a better comparison, we will write and train the LSTM model on the same processed data and machine used for the Transformer model.  
 
@@ -137,7 +143,7 @@ where $P$ is the precision, $R$ is the recall. We used the test split of the MAE
 For the velocity model, we used a different metric. As the velocities represent the intensity of the notes we hear, we track the number of notes (onsets) that are predicted to be played, which are within \(\{10\%, 3\%, 1\%\}\) of the ground truth velocities. Our velocity model achieves \(\{95.78\%, 59.46\%, 21.48\%\}\) on these metrics respectively. The baseline model achieves ..., again indicating the transformer encoder was able to outperform the LSTM.
 
 \section{Testing}
-One concern is that the music in the MAESTRO dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{MAESTRO}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
+One concern is that the music in the MAESTRO dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
 
 We decided to record our own music. In the spirit of having a much different style than the music in the dataset, we recorded an \textit{anime} song played in \begin{CJK}{UTF8}{min}なんでもないや.\end{CJK}
 
@@ -158,5 +164,7 @@ In the United States, the music sheet industry is worth around 1 billion USD\cit
 However, this technology will negatively affect small composers, who may make a living by selling sheet music to their music, for example on services such as MusicSpoke\cite{musicspoke}. If this technology is accurate and readily available, it may encourage musicians to automatically generate the sheet music to the songs they like, instead of purchasing and supporting artists. Fortunately, transcribing isn’t just about having the right notes, but the style in which it is presented. This is why two transcribers will not produce the same sheet music for the same song.
 
 The MASTERO dataset and the scope of our project consist of working solely with music, so there is a low risk of discriminating against humans from pre-processing to training and post-processing. However, a large majority of the music from the dataset is Western music, so the results would likely be more reliable towards Western music. Thus, people from other cultures may not find the same success in this model as people in Western cultures do. To address this, we will attempt to find other similar datasets that were trained on music from other cultures.
+\section{Conclusion}
+We are able to demonstrate that our model, while not perfect, is able to transcribe audio that is at least competitive with the existing state-of-the-art model in music transcription. We have shown that switching from a LSTM to a transformer model can drastically improve the performance. Future work involves improving the model to recognize lower notes through data augmentation.
 \printbibliography
 \end{document}
