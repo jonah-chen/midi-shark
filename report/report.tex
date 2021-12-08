@@ -16,7 +16,11 @@
 \usepackage{siunitx}
 \usepackage{amsmath}
 \usepackage{CJKutf8}
-
+\usepackage{float}
+% \renewcommand{\thempfootnote}{\arabic{footnote}}
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
 \pagestyle{fancy}
 \titleformat{\section}{\large\scshape}{\thesection}{1em}{}
 \titleformat{\subsection}
@@ -96,7 +100,7 @@ A piano has 88 keys but a human only has 10 fingers. On average, less than $5\%$
 \end{equation}
 where $P$ is the precision, $R$ is the recall. We used the test split of the MAESTRO dataset which was never used in training or hyperparameter tuning.
 
-\begin{table}
+\begin{table}[H]
   \begin{minipage}{\linewidth}
     \centering
     \begin{tabular}{|c|c|}
@@ -107,15 +111,15 @@ where $P$ is the precision, $R$ is the recall. We used the test split of the MAE
         \hline
         Kelz et al., 2016 & \(71.60\%\)\\
         \hline
-        Melodyne\footnote[1]{Commercial software, not machine learning model.} & \(58.57\%\)\\
+        Melodyne\footnote{Commercial software, not machine learning model.} & \(58.57\%\)\\
         \hline
         OF & \(78.30\%\)\\
         \hline
         \textbf{Google’s 2021 Model} & \(\mathbf{82.18\%}\)\\
         \hline
-        Baseline Model (LSTM)\footnotemark[2]\footnote[1]{Same architecture as OF, but trained by us with the same hyperparameters.} & \(74.44\%\)\\
+        Baseline Model (LSTM)\footnote{Same architecture as OF, but trained by us with the same hyperparameters.}\footnoteref{fn:midishark} & \(74.44\%\)\\
         \hline
-        Midi Shark (Us)\footnote{Tested on the test split of the MAESTRO dataset, because the MAPS dataset is unavailiable due to website failure.} & \(79.01\%\)\\
+        Midi Shark (Us)\footnote{\label{fn:midishark}Tested on the test split of the MAESTRO dataset, because the MAPS dataset is unavailiable due to website failure.} & \(79.01\%\)\\
         \hline
     \end{tabular}
   \end{minipage}
