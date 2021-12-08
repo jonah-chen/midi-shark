@@ -82,10 +82,9 @@ This is a reasonable choice since our hypothesis is that introducing a transform
 
 
 \section{Quantitative Results}
-
-
-
-\begin{center}
+\begin{table}
+  \begin{minipage}{\linewidth}
+    \centering
     \begin{tabular}{|c|c|}
         \hline
         Model& Frames F1 Score \\
@@ -103,7 +102,8 @@ This is a reasonable choice since our hypothesis is that introducing a transform
         Midi Shark (Us) & \(79.01\%\)\\
         \hline
     \end{tabular}
-\end{center}
+  \end{minipage}
+\end{table}
 
 \section{Testing}
 One concern is that the music in the Maestro dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
