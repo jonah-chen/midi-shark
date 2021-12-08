@@ -148,9 +148,29 @@ In general, the generated audio sounds very good and captures the main melody, h
 \section{Discussion}
 When testing on both the test set and completely new data collected independently, we found that the model fails to capture some lower notes. This makes sense as it is difficult to pick up lower frequencies through a microphone, and the microphones the MAESTRO dataset used to record was likely calibrated to better capture the lower frequencies.
 
-Furthermore, there are a few false positives that is exactly one octave above the melody. This also makes sense because it corresponds to the first overtone of the melody, which also happens to be the most dominant one. These same characteristics was found when testing the model on other music found on Youtube, though the quality heavily depended on the quality of the recording device.
+Furthermore, there are a few false positives that is exactly one octave above the melody on our own recording. This corresponds to the first overtone of the melody, which is the most dominant one. These same characteristics were found when testing the model on other music found on YouTube, though the quality heavily depended on the quality of the recording device. As our microphone was not calibrated, the higher frequencies are likely to be more intense than those used in the MAESTRO dataset, which caused a model trained on the dataset to produce false positives.
 
-To fix this in future models, we can augment our training data by adding in random noise that is consistent with poor microphone quality. This will allow the model to perform better on new data that is not recorded with a professionally calibrated microphone.
+To fix this in future models, we can augment our training data by adding in random noise that is consistent with poor microphone quality. We can also adjust the weight of each frequency to better represent the behavior of real-world recording devices. This will allow the model to perform better on new data that is not recorded with a professionally calibrated microphone.
+
+We also noticed in Figure \ref{fig:results} that it is common for the model to split up a note into smaller pieces. This behavior could be explained with the pixel-wise cross-entropy loss function. If the model mispredicts only one pixel, it only incurs a small loss but it will split a note into two, which sounds unpleasant. It is possible to combine the onsets predictions with a classical algorithm to combine these segments.
+
+Another way to resolve this issue is to change the threshold for positive predictions. It is common to consider a ``positive'' prediction of the model outputs a probability greater than \(0.5\) (or a positive logit). However, we discovered using figure \ref{fig:threshold} that using a threshold of \(-0.4\) was able to achieve the highest F1 score on the validation set of just under $79\%$. Moreover, much fewer notes were split up.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{figures/threshold.png}
+  \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, F1 score) for \textbf{o}nsets and \textbf{f}rames with different threhold logits.}
+  \label{fig:threshold}
+\end{figure}
+
+Finally, we noticed that when training the model, the model would stagonate at zero accuracy for up to one hour before it would start to improve for small learning rates (\(lr<10^{-4}\)), and the model never improved for large learning rates. 
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{figures/debug.png}
+  \caption{The models progress tracked every minute of training. Blue indicates the loss and orange indicates the \textbf{maximum} logits the model predicted throughout all batches of the training data it saw. Note if that the orange line is below 0, the model would not predict any notes being played.}
+  \label{fig:lr}
+\end{figure}
 
 \section{Ethical Considerations}
 In the United States, the music sheet industry is worth around 1 billion USD\cite{musicspoke}. A technology that can transcribe music may render purchasing music sheets useless. Many of these sales come from music books, which often contain several scores that can be readily found online, so big publishers will likely not be greatly affected by this technology.
