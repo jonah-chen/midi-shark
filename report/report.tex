@@ -60,7 +60,7 @@ Polyphonic automatic music transcription is a difficult task due to the potentia
 Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve an F1 score of 78.30\% and 82.29\% on frames and notes respectively for the MASTERO dataset, which is arguably the largest dataset for music transcription task.
 
 \section{Data Processing}
-The Maestro dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are over $200$ hours of piano performances.
+The Maestro dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
 To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$
 
@@ -90,8 +90,17 @@ The baseline model we compare our model to is the LSTM described in the \textit{
 
 This is a reasonable choice since our hypothesis is that introducing a transformer will improve the performance of the model. Since Google researchers likely have far greater computing resources than us and better data processing, to create a better comparison, we will write and train the LSTM model on the same processed data and machine used for the Transformer model.  
 
+\section{Qualitative Results}
+The results of one of the songs in the test set is shown in figure \ref{fig:results}.
+\begin{figure*}
+  \centering
+  \includegraphics[width=\linewidth]{figures/results.png}
+  \caption{The frame predictions the model made on one of the songs in the test set. Yellow represents the true positives, purple represents the false negatives and the red represents the false positives.}
+  \label{fig:results}
+\end{figure*}
+At first glance, the frames model seems to be very accurate. However, many notes are broken up into smaller segments, leading to a lot of false negatives. This can be addressed by changing the threshold for positive predictions, which is analyzed further in the quantitative results section.
 
-
+Furthermore, the lower frequencies were not as accurate as the higher frequencies. These characteristics are consistent with other predictions in the test set. The reason for these inconsistencies is explained in the discussion section.
 \section{Quantitative Results}
 
 A piano has 88 keys but a human only has 10 fingers. On average, less than $5\%$ of the notes are pressed at any given time. If we were to use accuracy as our metric, a model that predicts no notes at all would achieve over $95\%$ accuracy. Clearly, accuracy is not a good indicator of the performance of a model. Instead, we opted to use the F1 score
