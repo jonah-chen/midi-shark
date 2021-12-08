@@ -9,6 +9,7 @@ def create_frames_velocity_dict(frames, velocities = None):
     '''
         Creates two dictionaries where the keys are (note, time)
         and the values are the duration and velocity of the note.
+
         If velocities = None, then the velocity is set to 50.
     '''
     note_dict = {}
@@ -43,6 +44,7 @@ def write_to_midi(output_file, note_dict, velocity_dict):
     '''
         Takes in the note duration and velocity dictionaries and writes
         them to a midi file.
+
         The midi file is saved to the output_file.
     '''
 
@@ -79,7 +81,6 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
         Takes in a folder of 20s numpy files and combines them 
         to a single numpy file
     '''
-    frame_list = os.listdir(frame_input_folder)
     frame_list = sorted(frame_list, key=lambda x: float(x.split('_')[1].split('.')[0]))
 
     frames = None
@@ -109,6 +110,7 @@ def folder_to_midi(frame_input_folder, velocity_input_folder, output_file, audio
     '''
         Takes in folders of 20s numpy files and combines them into a single
         midi file. 
+
         audio: Creates audio as well if true
     '''
     frames, velocities = merge_songs(frame_input_folder, velocity_input_folder, output_file)
@@ -116,7 +118,7 @@ def folder_to_midi(frame_input_folder, velocity_input_folder, output_file, audio
     write_to_midi(output_file, note_dict, velocity_dict)
     if audio == True:
         fs = FluidSynth(sound_font, sample_rate)
-        fs.midi_to_audio(output_file, output_file[:-5]+'.wav')
+        fs.midi_to_audio(output_file, output_file[:-4]+'.wav')
 
 if __name__ == '__main__':
     '''
