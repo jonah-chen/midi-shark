@@ -89,6 +89,13 @@ This is a reasonable choice since our hypothesis is that introducing a transform
 
 
 \section{Quantitative Results}
+
+A piano has 88 keys but a human only has 10 fingers. On average, less than $5\%$ of the notes are pressed at any given time. If we were to use accuracy as our metric, a model that predicts no notes at all would achieve over $95\%$ accuracy. Clearly, accuracy is not a good indicator of the performance of a model. Instead, we opted to use the F1 score
+\begin{equation}
+  F1 = \frac{2PR}{P+R}
+\end{equation}
+where $P$ is the precision, $R$ is the recall. We used the test split of the MAESTRO dataset which was never used in training or hyperparameter tuning.
+
 \begin{table}
   \begin{minipage}{\linewidth}
     \centering
@@ -100,17 +107,21 @@ This is a reasonable choice since our hypothesis is that introducing a transform
         \hline
         Kelz et al., 2016 & \(71.60\%\)\\
         \hline
-        Melodyne\footnote{Commercial software, not machine learning model.} & \(58.57\%\)\\
+        Melodyne\footnote[1]{Commercial software, not machine learning model.} & \(58.57\%\)\\
         \hline
-        Google’s 2017 Model & \(78.30\%\)\\
+        OF & \(78.30\%\)\\
         \hline
         \textbf{Google’s 2021 Model} & \(\mathbf{82.18\%}\)\\
         \hline
-        Midi Shark (Us) & \(79.01\%\)\\
+        Baseline Model (LSTM)\footnotemark[2]\footnote[1]{Same architecture as OF, but trained by us with the same hyperparameters.} & \(74.44\%\)\\
+        \hline
+        Midi Shark (Us)\footnote{Tested on the test split of the MAESTRO dataset, because the MAPS dataset is unavailiable due to website failure.} & \(79.01\%\)\\
         \hline
     \end{tabular}
   \end{minipage}
 \end{table}
+
+For the velocity model, we used a different metric. As the velocities represent the intensity of the notes we hear, we track the number of notes (onsets) that are predicted to be played, which are within \(\{10\%, 3\%, 1\%\}\) of the ground truth velocities. Our velocity model achieves \(\{95.78\%, 59.46\%, 21.48\%\}\) on these metrics respectively. The baseline model achieves ..., again indicating the transformer encoder was able to outperform the LSTM.
 
 \section{Testing}
 One concern is that the music in the Maestro dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
