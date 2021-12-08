@@ -15,6 +15,7 @@
 \usepackage{fancyhdr}
 \usepackage{siunitx}
 \usepackage{amsmath}
+\usepackage{CJKutf8}
 
 \pagestyle{fancy}
 \titleformat{\section}{\large\scshape}{\thesection}{1em}{}
@@ -55,11 +56,17 @@ Polyphonic automatic music transcription is a difficult task due to the potentia
 Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve an F1 score of 78.30\% and 82.29\% on frames and notes respectively for the MASTERO dataset, which is arguably the largest dataset for music transcription task.
 
 \section{Data Processing}
-We used Maestro Dataset as the Google Brain Team did to develop the OF model. This dataset consists of pairs of WAV files and MIDI files of piano audio, and in total, they amount to 200 hours.
-WAV files are raw audio files, and corresponding MIDI file contains labeled information of each WAV file, such as when, what and how strong each note was played.
+The Maestro dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are over $200$ hours of piano performances.
 
-We treated MIDI files as the ground truth; our model takes WAV files as the input, and trains against the MIDI files. However, both file types are hard for the model to understand, so we needed to perform data processing to begin with.
+To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$
 
+The MIDI files acted as the ground truth, but the files only contained information about the onset and offset of each note. We preprocessed each midi file into three arrays of shape $88 \times 862,$ where $88$ is the number of notes. Each entry $(t,n)$ denotes the value of the array at a specific time $t$ and a note $n$.
+\begin{itemize}
+  \item Onset Array: We have $(t,n)=1$ if the note $n$ is played at time $t$ but not played at time $t-1.$
+  \item Frames Array: We have $(t,n)=1$ if the note $n$ is played at time $t$.
+  \item Velocities Array: We have $(t,n)=v/127$ where $v \in [0,127]$ is the velocity of the note, which is an indicator of the dynamics.
+\end{itemize}
+These arrays act as the labels for each of the three sub-tasks described in figure \ref{fig:architecture}.
 Our data processing can be broken down to two major parts. One is converting WAV files to spectrograms, and the other task is converting MIDI files to a certain kind of form which is easier to train the model.
 
 We chose to convert MIDI files into arrays with time on the x-axis and note on the y-axis. As MIDI files hold when each note begins, how long it lasts, and how strong it was played, we divided MIDI files into three arrays respectively; first array is onsets array, the second array is frames array, and the third array is velocity array.
@@ -108,9 +115,15 @@ This is a reasonable choice since our hypothesis is that introducing a transform
 \section{Testing}
 One concern is that the music in the Maestro dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
 
-We decided to record our own music.
+We decided to record our own music. In the spirit of having a much different style than the music in the dataset, we recorded an \textit{anime} song played in \begin{CJK}{UTF8}{min}なんでもないや.\end{CJK}
 
+Since we don't have the ground truth, and there were some mistakes made while playing it, we decided to use a holistic evaluation instead, which is what matters at the very end. The generated audio is linked in the Github repository.
 
+In general, the generated audio sounds very good and captures the main melody, harmony, and dynamics. However, it fails to capture some lower notes. This makes sense as it is difficult to pick up lower frequencies through a microphone, and the microphones the Maestro dataset used to record was likely calibrated to better capture the lower frequencies.
+
+Furthermore, there are a few false positives that is exactly one octave above the melody. This also makes sense because it corresponds to the first overtone of the melody, which also happens to be the most dominant one. These same characteristics was found when testing the model on other music found on Youtube, though the quality heavily depended on the quality of the recording device.
+
+To fix this in future models, we can augment our training data by adding in random noise that is consistent with poor microphone quality. This will allow the model to perform better on new data that is not recorded with a professionally calibrated microphone.
 \section{Discussion}
 \section{Ethical Considerations}
 In the United States, the music sheet industry is worth around 1 billion USD\cite{musicspoke}. A technology that can transcribe music may render purchasing music sheets useless. Many of these sales come from music books, which often contain several scores that can be readily found online, so big publishers will likely not be greatly affected by this technology.
