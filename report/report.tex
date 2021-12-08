@@ -60,7 +60,7 @@ Polyphonic automatic music transcription is a difficult task due to the potentia
 Since the advent of machine learning, there have been models developed for solving this problem. A relatively successful model is the Onsets and Frames (OF) model developed by the Google Brain Team using TensorFlow in 2017 and implemented into the open-source “magenta” framework[9]. This model uses a two-headed encoder-decoder architecture that predicts onsets (when the notes are played), and frames (what notes are played at the onset). This model uses convolutional neural networks as encoders and bidirectional LSTM as decoders and was able to achieve an F1 score of 78.30\% and 82.29\% on frames and notes respectively for the MASTERO dataset, which is arguably the largest dataset for music transcription task.
 
 \section{Data Processing}
-The Maestro dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
+The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
 To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$
 
@@ -137,7 +137,7 @@ where $P$ is the precision, $R$ is the recall. We used the test split of the MAE
 For the velocity model, we used a different metric. As the velocities represent the intensity of the notes we hear, we track the number of notes (onsets) that are predicted to be played, which are within \(\{10\%, 3\%, 1\%\}\) of the ground truth velocities. Our velocity model achieves \(\{95.78\%, 59.46\%, 21.48\%\}\) on these metrics respectively. The baseline model achieves ..., again indicating the transformer encoder was able to outperform the LSTM.
 
 \section{Testing}
-One concern is that the music in the Maestro dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{maestro}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
+One concern is that the music in the MAESTRO dataset share similar features. They are mostly classical pieces from the 17th to early 20th century\cite{MAESTRO}, and there could be inherent biases the creators of the dataset might have when selecting the pieces and the type of recording device used.
 
 We decided to record our own music. In the spirit of having a much different style than the music in the dataset, we recorded an \textit{anime} song played in \begin{CJK}{UTF8}{min}なんでもないや.\end{CJK}
 
@@ -146,7 +146,7 @@ Since we don't have the ground truth, and there were some mistakes made while pl
 In general, the generated audio sounds very good and captures the main melody, harmony, and dynamics. However, it fails to capture some lower notes. Furthermore, there are a few false positives that is exactly one octave above the melody. These are explained in the Discussion section and steps are described to address them.
 
 \section{Discussion}
-When testing on both the test set and completely new data collected independently, we found that the model fails to capture some lower notes. This makes sense as it is difficult to pick up lower frequencies through a microphone, and the microphones the Maestro dataset used to record was likely calibrated to better capture the lower frequencies.
+When testing on both the test set and completely new data collected independently, we found that the model fails to capture some lower notes. This makes sense as it is difficult to pick up lower frequencies through a microphone, and the microphones the MAESTRO dataset used to record was likely calibrated to better capture the lower frequencies.
 
 Furthermore, there are a few false positives that is exactly one octave above the melody. This also makes sense because it corresponds to the first overtone of the melody, which also happens to be the most dominant one. These same characteristics was found when testing the model on other music found on Youtube, though the quality heavily depended on the quality of the recording device.
 
