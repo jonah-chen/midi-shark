@@ -75,8 +75,36 @@ In the OF model, the processed mel-spectrogram data is encoded using a stack of 
 Following similar data flow to OF, we will have a two-headed model with an onset and frame head. The onset prediction is passed as an input to the transformer encoder that decodes the frame predictions. We use the same loss functions for the two heads from OF (a generalization of cross-entropy loss, see eq.1-6 in\cite{onsets_and_frames}). For the velocity model, we use a similar approach to the frames model but without the input from onset prediction. Apart from that, we use the modified version of mean square error instead of a cross-entropy loss as a loss function. For all the models, we use Adam optimizer as our optimization function.  For all the models, we also use fully connected layers in between. For a clearer picture of the model structure, please refer to figure 1 in the introduction section.
 
 \section{Baseline Model}
+
+
+
 \section{Quantitative Results}
+
+
+
+\begin{center}
+    \begin{tabular}{|c|c|}
+        \hline
+        Model& Frames F1 Score \\
+        \hline
+        Sigtia et al., 2016 & \(72.22\%\)\\
+        \hline
+        Kelz et al., 2016 & \(71.60\%\)\\
+        \hline
+        Melodyne\footnote{Commercial software, not machine learning model.} & \(58.57\%\)\\
+        \hline
+        Google’s 2017 Model & \(78.30\%\)\\
+        \hline
+        \textbf{Google’s 2021 Model} & \(\mathbf{82.18\%}\)\\
+        \hline
+        Midi Shark (Us) & \(79.01\%\)\\
+        \hline
+    \end{tabular}
+\end{center}
+
 \section{Testing}
+
+
 \section{Discussion}
 \section{Ethical Considerations}
 In the United States, the music sheet industry is worth around 1 billion USD\cite{musicspoke}. A technology that can transcribe music may render purchasing music sheets useless. Many of these sales come from music books, which often contain several scores that can be readily found online, so big publishers will likely not be greatly affected by this technology.
@@ -84,7 +112,9 @@ In the United States, the music sheet industry is worth around 1 billion USD\cit
 However, this technology will negatively affect small composers, who may make a living by selling sheet music to their music, for example on services such as MusicSpoke\cite{musicspoke}. If this technology is accurate and readily available, it may encourage musicians to automatically generate the sheet music to the songs they like, instead of purchasing and supporting artists. Fortunately, transcribing isn’t just about having the right notes, but the style in which it is presented. This is why two transcribers will not produce the same sheet music for the same song.
 
 The MASTERO dataset and the scope of our project consist of working solely with music, so there is a low risk of discriminating against humans from pre-processing to training and post-processing. However, a large majority of the music from the dataset is Western music, so the results would likely be more reliable towards Western music. Thus, people from other cultures may not find the same success in this model as people in Western cultures do. To address this, we will attempt to find other similar datasets that were trained on music from other cultures.
+
 \section{References}
+
 
 \printbibliography
 \end{document}
