@@ -81,7 +81,7 @@ def merge_songs(frame_input_folder, velocity_input_folder, output_file):
         Takes in a folder of 20s numpy files and combines them 
         to a single numpy file
     '''
-    frame_list = os.listdir(frame_input_folder)
+    frame_list = sorted(frame_list, key=lambda x: float(x.split('_')[1].split('.')[0]))
 
     frames = None
     velocities = None
