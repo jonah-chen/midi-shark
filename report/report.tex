@@ -40,6 +40,9 @@
 \date{\today}
 \begin{document}
 \maketitle
+\begin{abstract}
+  This project uses transformer encoder to transcribe piano music in a dual-objective fashion similar to the Onsets-Frames model\cite{onsets_and_frames}. Our model was able to achieve a slightly higher F1-score of \(79.01\%\) with significantly less computational power, demonstrating that once again, transformers were able to outperform LSTMs. On real world data, a recording of the \textit{anime} song \begin{CJK}{UTF8}{min}なんでもないや.\end{CJK} played by Jonah Chen was given to the model. We observed the model was able to capture the key elements of the song, although there were still a few mistakes in the transcription.
+\end{abstract}
 \section{Introduction}
 Transcription of music is the process of determining the pitches and timing of notes from recorded audio files. Transcription has always been a specialized task that requires years of musical training. Transcription is even more challenging for polyphonic music, such as piano, which features the simultaneous production of two or more tones. The majority of traditional transcription models focus on extracting all of the notes from the recording using the node onset. This, however, is not the way a trained musician approaches the problem\cite{intro}.
 
@@ -65,7 +68,7 @@ Since the advent of machine learning, there have been models developed for solvi
 \section{Data Processing}
 The MAESTRO dataset consists of pairs of WAV and MIDI files of piano audio separated by year. The years consists of $2004,2006,2008-2018.$ The audio in $2017$ served as the validation set and the audio in $2018$ served as the test set. In total, there are around $200$ hours of piano performances.
 
-To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into $20s$ non-overlapping segments such that each segment has a shape of $229 \times 862.$ An example spectrogram is shown in figure \ref{fig:spectrogram}, and is heavily inspired from the onsets and frames baseline model\cite{onsets_and_frames}.
+To process the WAV files to act as inputs, we converted them to frequency spectrograms by applying a Short-Time Fourier Transform using a sampling rate of $16000$, and used the Mel scale for the frequency in order to generate $229$ bands. Since songs can be up to $30$ minutes, and transformers have a time complexity of $\mathcal{O}(n^2),$ we are motivated to keep sequence lengths short. As a result, we partitioned the spectrogram into \SI{20}{s} non-overlapping segments such that each segment has a shape of $229 \times 862.$ An example spectrogram is shown in figure \ref{fig:spectrogram}, and is heavily inspired from the onsets and frames baseline model\cite{onsets_and_frames}.
 \begin{figure*}
   \centering
   \includegraphics[width=0.8\linewidth]{figures/spectrogram.png}
