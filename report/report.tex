@@ -45,6 +45,7 @@ Transcription of music is the process of determining the pitches and timing of n
 
 We developed a model that is more accurate at transcribing piano recordings by analyzing the recording with a neural network and focusing on both the onsets and offsets of the node. Moreover, since images and audios both have common two-dimensional time-frequency input representations, the fact that CNN performs well in image classification problems suggests that CNN could potentially be used for music transcription\cite{onsets_and_frames}.
 
+\textbf{The code is open source and available \href{https://github.com/jonah-chen/midi-shark/}{here}}.
 \section{Illustration}
 The model architecture is shown in figure \ref{fig:architecture}.
 \begin{figure}[h!]
@@ -165,7 +166,7 @@ Another way to resolve this issue is to change the threshold for positive predic
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{figures/threshold.png}
-  \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, F1 score) for \textbf{o}nsets and \textbf{f}rames with different threhold logits.}
+  \caption{The metrics (\textbf{P}recision, \textbf{R}ecall, \textbf{F1} score) for \textbf{o}nsets and \textbf{f}rames with different threhold logits.}
   \label{fig:threshold}
 \end{figure}
 
