@@ -1,0 +1,42 @@
+\documentclass[a4paper,twocolumn,10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{listings}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}     % Can be removed after putting your text content
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\pagestyle{fancy}
+\titleformat{\section}
+  {\large\scshape}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\scshape}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\scshape}{\thesubsubsection}{1em}{}
+\pagenumbering{arabic}
+\newtheorem{definition}{Definition}[section]
+\usepackage[
+    backend=biber, 
+    natbib=true,
+    style=numeric,
+    sorting=none
+]{biblatex}
+\usepackage{csquotes}
+\addbibresource{citations.bib}
+
+\title{\vspace{-50pt}\bfseries{\Large{Midi Shark: For Piano Transcription}}}
+\author{\normalfont{Jonah Chen, QiLin Xue, Joe Hattori, Khanatat Thangwatthanarat}\\\small{University of Toronto}\\\vspace{-10pt}\small{\url{{jonah.chen,qilin.xue,joe.hattori,k.thangwatthanarat}@mail.utoronto.ca}}}
+\date{}
+\begin{document}
+\maketitle
+
+\end{document}
