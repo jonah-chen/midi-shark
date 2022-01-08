@@ -1,5 +1,7 @@
 # midi-shark
 
+[![Presentation](https://i9.ytimg.com/vi/QNVYxn5-YnY/sddefault.jpg?v=61a7def9&sqp=CPyt544G&rs=AOn4CLAQuk5eZGMuc0cnjdopW6m09zIJTg)](https://youtu.be/QNVYxn5-YnY)
+
 ## Usage:
 
 Make sure that requirements in `requirements.txt` are installed, or run
@@ -10,11 +12,14 @@ Then, make sure you have [FluidSynth](https://www.fluidsynth.org/) and a `.sf2` 
 
 #### Preprocessing the Data. 
 1. Create a file named `.env` in the project's root directory, following the template shown in the `.env.example` file.
-2. Execute `processing/preprocess_batch.py` using Python. You must have the dataset and sufficient disk space of [] MB to store the preprocessed data. If you wish to only preprocess a subset, specify the `--year` argument. 
+2. Execute `processing/preprocess_batch.py` using Python. You must have the dataset and sufficient disk space of [] MB to store the preprocessed data. If you wish to only preprocess a subset, specify the `--year` argument.
 
-## Housekeeping Instructions: DEVELOPERS PLEASE READ
-1. Please do **not** upload any raw data unless there is a **very good reason** (like as an example). This will clog up the repository.
-2. For consistency, maintain the datasets in the same general file structure. If any changes to the file structure is deemed required, it must be communicated and approved by everybody on the team. For examples, scroll to the bottom.
+#### Training a Model
+1. Dataloaders (for pytorch) for all components of the dataset is located in [model/database.py](https://github.com/jonah-chen/midi-shark/blob/17c212d4d3ec920e250edcbe3f6f803a324ade95/model/database.py). Use this to load your data.
+2. Then, you can train the models we have built using the `fit` method, and evaluate them using the `val_split` method. To use your own models, you can still use the dataloaders.
+
+#### Making Predictions
+1. You can use the code in [this jupyter notebook](https://github.com/jonah-chen/midi-shark/blob/17c212d4d3ec920e250edcbe3f6f803a324ade95/pred.ipynb) to make predictions. However, ensure you have trained some sort of model to make the predictions.
 
 ## Resources/References
 
